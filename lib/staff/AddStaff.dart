@@ -56,37 +56,80 @@ class _AddstaffState extends State<Addstaff> {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen size
+    final screenSize = MediaQuery.of(context).size;
+    
+    // Determine container width based on screen size
+    double containerWidth = screenSize.width;
+    double containerHeight = screenSize.height;
+    
+    // For very large screens, cap the width
+    if (screenSize.width > 1000) {
+      containerWidth = screenSize.width * 0.74;
+    } else if (screenSize.width > 900) {
+      containerWidth = screenSize.width * 0.75;
+    } else {
+      containerWidth = screenSize.width * 0.9;
+    }
+    
+    // Set container height based on screen size
+    if (screenSize.height > 900) {
+      containerHeight = screenSize.height * 0.75;
+    } else {
+      containerHeight = screenSize.height * 0.85;
+    }
+
     return Scaffold(
-      body: Container(
-        width: MediaQuery.of(context).size.width*0.6,
-        height: MediaQuery.of(context).size.height*0.65,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadiusDirectional.circular(20),
-          color: Colors.grey.shade100,),
-        
+      body: SingleChildScrollView(
         child: Center(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              // Responsive width based on screen size
-              double formWidth =
-                  constraints.maxWidth > 800
-                      ? 800
-                      : constraints.maxWidth * 0.6;
-      
-              return SizedBox(
-                width: formWidth,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 40),
-                    _buildStepper(),
-                    const SizedBox(height: 40),
-                    _buildCurrentStep(),
-                  ],
-                ),
-              );
-            },
+          child: Container(
+            width: containerWidth,
+            constraints: BoxConstraints(
+              minHeight: containerHeight,
+            ),
+            margin: EdgeInsets.symmetric(
+              vertical: screenSize.height * 0.05,
+              horizontal: screenSize.width * 0.02,
+            ),
+            padding: EdgeInsets.all(screenSize.width > 600 ? 24.0 : 16.0),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              color: Colors.grey.shade100,
+            ),
+            child: _buildFormContent(context),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFormContent(BuildContext context) {
+    // Form content width determined by screen size
+    final screenWidth = MediaQuery.of(context).size.width;
+    double formWidth = screenWidth;
+    
+    // Adjust based on screen size
+    if (screenWidth > 1400) {
+      formWidth = 1000;
+    } else if (screenWidth > 900) {
+      formWidth = screenWidth * 0.7;
+    } else {
+      formWidth = screenWidth * 0.9;
+    }
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: formWidth,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(height: MediaQuery.of(context).size.height * 0.03),
+            _buildStepper(),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.04),
+            _buildCurrentStep(),
+          ],
         ),
       ),
     );
@@ -95,8 +138,15 @@ class _AddstaffState extends State<Addstaff> {
   Widget _buildStepper() {
     return LayoutBuilder(
       builder: (context, constraints) {
+        // Determine if this is a small, medium, or large screen
         bool isSmallScreen = constraints.maxWidth < 600;
-
+        bool isMediumScreen = constraints.maxWidth >= 600 && constraints.maxWidth < 960;
+        bool isLargeScreen = constraints.maxWidth >= 960;
+        
+        // Adjust font sizes based on screen size
+        double titleFontSize = isSmallScreen ? 10 : (isMediumScreen ? 12 : 14);
+        double stepIndicatorSize = isSmallScreen ? 24 : (isMediumScreen ? 28 : 30);
+        
         return Column(
           children: [
             Row(
@@ -111,18 +161,19 @@ class _AddstaffState extends State<Addstaff> {
                     child: Column(
                       children: [
                         Container(
-                          width: 30,
-                          height: 30,
-                          // decoration: BoxDecoration(
-                          //   shape: BoxShape.circle,
-                          //   color: isActive ? primaryColor : Colors.grey.shade300,
-                          // ),
+                          width: stepIndicatorSize,
+                          height: stepIndicatorSize,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isActive ? primaryColor : Colors.grey.shade300,
+                          ),
                           child: Center(
                             child: Text(
                               '${stepIndex + 1}',
                               style: TextStyle(
-                                color: isActive ? primaryColor : Colors.grey,
+                                color: isActive ? Colors.white : Colors.grey,
                                 fontWeight: FontWeight.bold,
+                                fontSize: isSmallScreen ? 12 : 14,
                               ),
                             ),
                           ),
@@ -132,11 +183,8 @@ class _AddstaffState extends State<Addstaff> {
                           Text(
                             _stepTitles[stepIndex],
                             style: TextStyle(
-                              fontSize: 12,
-                              fontWeight:
-                                  isActive
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                              fontSize: titleFontSize,
+                              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                               color: isActive ? primaryColor : Colors.grey,
                             ),
                             textAlign: TextAlign.center,
@@ -171,12 +219,12 @@ class _AddstaffState extends State<Addstaff> {
                       child: Text(
                         _stepTitles[index],
                         style: TextStyle(
-                          fontSize: 10,
-                          fontWeight:
-                              isActive ? FontWeight.bold : FontWeight.normal,
+                          fontSize: titleFontSize,
+                          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                           color: isActive ? primaryColor : Colors.grey,
                         ),
                         textAlign: TextAlign.center,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     );
                   }),
@@ -204,19 +252,25 @@ class _AddstaffState extends State<Addstaff> {
   }
 
   Widget _buildBasicInformationStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Basic information',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 32),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            bool isSmallScreen = constraints.maxWidth < 600;
-
-            return Wrap(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Responsive sizing
+        bool isSmallScreen = constraints.maxWidth < 600;
+        bool isMobileLayout = constraints.maxWidth < 768;
+        double headingSize = isSmallScreen ? 20.0 : 24.0;
+        double labelSize = isSmallScreen ? 12.0 : 14.0;
+        double hintSize = isSmallScreen ? 10.0 : 12.0;
+        double verticalSpacing = isSmallScreen ? 24.0 : 32.0;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Basic information',
+              style: TextStyle(fontSize: headingSize, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: verticalSpacing),
+            Wrap(
               spacing: 16,
               runSpacing: 16,
               children: [
@@ -231,11 +285,10 @@ class _AddstaffState extends State<Addstaff> {
                       });
                     },
                     items: ['Patient', 'Doctor', 'Administrator'],
+                    hintSize: hintSize,
                   ),
-                  width:
-                      isSmallScreen
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
+                  width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                  labelSize: labelSize,
                 ),
                 _buildFormField(
                   'Gender',
@@ -248,209 +301,232 @@ class _AddstaffState extends State<Addstaff> {
                       });
                     },
                     items: ['Male', 'Female', 'Other'],
+                    hintSize: hintSize,
                   ),
-                  width:
-                      isSmallScreen
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
+                  width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                  labelSize: labelSize,
                 ),
                 _buildFormField(
                   'First name',
                   _buildTextField(
                     controller: _firstNameController,
                     hintText: 'Your first name',
+                    hintSize: hintSize,
                   ),
-                  width:
-                      isSmallScreen
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
+                  width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                  labelSize: labelSize,
                 ),
                 _buildFormField(
                   'Designation',
                   _buildTextField(
                     controller: _designationController,
                     hintText: 'Your designation',
+                    hintSize: hintSize,
                   ),
-                  width:
-                      isSmallScreen
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
+                  width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                  labelSize: labelSize,
                 ),
                 _buildFormField(
                   'Last name',
                   _buildTextField(
                     controller: _lastNameController,
                     hintText: 'Your last name',
+                    hintSize: hintSize,
                   ),
-                  width:
-                      isSmallScreen
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
+                  width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                  labelSize: labelSize,
                 ),
                 _buildFormField(
                   'Date of birth',
                   _buildDateField(
                     controller: _dateController,
                     hintText: 'Select your date of birth',
+                    hintSize: hintSize,
                   ),
-                  width:
-                      isSmallScreen
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
+                  width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                  labelSize: labelSize,
                 ),
                 _buildFormField(
                   'Email address',
                   _buildTextField(
                     controller: _emailController,
                     hintText: 'Your email address',
+                    hintSize: hintSize,
                   ),
-                  width:
-                      isSmallScreen
-                          ? constraints.maxWidth
-                          : constraints.maxWidth,
+                  width: constraints.maxWidth,
+                  labelSize: labelSize,
                 ),
               ],
-            );
-          },
-        ),
-        const SizedBox(height: 40),
-
-        Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            decoration: BoxDecoration(
-              color: primaryColor,
-              borderRadius: BorderRadiusDirectional.circular(4),
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            child: TextButton(
-              onPressed: _nextStep,
-              child: Text('NEXT STEP', style: TextStyle(color: Colors.white)),
+            SizedBox(height: verticalSpacing),
+            Align(
+              alignment: Alignment.centerRight,
+              child: ElevatedButton(
+                onPressed: _nextStep,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isSmallScreen ? 12 : 16,
+                    vertical: isSmallScreen ? 8 : 12,
+                  ),
+                  textStyle: TextStyle(
+                    fontSize: isSmallScreen ? 12 : 14,
+                  ),
+                ),
+                child: const Text('NEXT STEP'),
+              ),
             ),
-          ),
-        ),
-      ],
+          ],
+        );
+      },
     );
   }
 
   Widget _buildDetailsStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Enter Details',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 32),
-        // Add form fields for details step
-        const SizedBox(height: 40),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isSmallScreen = constraints.maxWidth < 600;
+        double headingSize = isSmallScreen ? 20.0 : 24.0;
+        double verticalSpacing = isSmallScreen ? 24.0 : 32.0;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextButton(onPressed: _previousStep, child: const Text('PREVIOUS')),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: primaryColor,
-                  borderRadius: BorderRadiusDirectional.circular(4),
+            Text(
+              'Enter Details',
+              style: TextStyle(fontSize: headingSize, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: verticalSpacing),
+            // Add form fields for details step
+            SizedBox(height: verticalSpacing),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: _previousStep,
+                  child: Text('PREVIOUS', style: TextStyle(fontSize: isSmallScreen ? 12 : 14)),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                child: TextButton(
+                ElevatedButton(
                   onPressed: _nextStep,
-                  child: Text(
-                    'NEXT STEP',
-                    style: TextStyle(color: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 12 : 16,
+                      vertical: isSmallScreen ? 8 : 12,
+                    ),
+                    textStyle: TextStyle(
+                      fontSize: isSmallScreen ? 12 : 14,
+                    ),
                   ),
+                  child: const Text('NEXT STEP'),
                 ),
-              ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
   Widget _buildServicesStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Select Services',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 32),
-        // Add form fields for services step
-        const SizedBox(height: 40),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isSmallScreen = constraints.maxWidth < 600;
+        double headingSize = isSmallScreen ? 20.0 : 24.0;
+        double verticalSpacing = isSmallScreen ? 24.0 : 32.0;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextButton(onPressed: _previousStep, child: const Text('PREVIOUS')),
-            Align(
-              alignment: Alignment.centerRight,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: primaryColor,
-                  borderRadius: BorderRadiusDirectional.circular(4),
+            Text(
+              'Select Services',
+              style: TextStyle(fontSize: headingSize, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: verticalSpacing),
+            // Add form fields for services step
+            SizedBox(height: verticalSpacing),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: _previousStep,
+                  child: Text('PREVIOUS', style: TextStyle(fontSize: isSmallScreen ? 12 : 14)),
                 ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                child: TextButton(
+                ElevatedButton(
                   onPressed: _nextStep,
-                  child: Text(
-                    'NEXT STEP',
-                    style: TextStyle(color: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 12 : 16,
+                      vertical: isSmallScreen ? 8 : 12,
+                    ),
+                    textStyle: TextStyle(
+                      fontSize: isSmallScreen ? 12 : 14,
+                    ),
                   ),
+                  child: const Text('NEXT STEP'),
                 ),
-              ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
   Widget _buildReviewStep() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Review and Submit',
-          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 32),
-        // Add review summary
-        const SizedBox(height: 40),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isSmallScreen = constraints.maxWidth < 600;
+        double headingSize = isSmallScreen ? 20.0 : 24.0;
+        double verticalSpacing = isSmallScreen ? 24.0 : 32.0;
+        
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextButton(onPressed: _previousStep, child: const Text('PREVIOUS')),
-            ElevatedButton(
-              onPressed: () {
-                // Submit form logic
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: primaryColor,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 12,
+            Text(
+              'Review and Submit',
+              style: TextStyle(fontSize: headingSize, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: verticalSpacing),
+            // Add review summary
+            SizedBox(height: verticalSpacing),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                TextButton(
+                  onPressed: _previousStep,
+                  child: Text('PREVIOUS', style: TextStyle(fontSize: isSmallScreen ? 12 : 14)),
                 ),
-              ),
-              child: const Text('SUBMIT'),
+                ElevatedButton(
+                  onPressed: () {
+                    // Submit form logic
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 16 : 24,
+                      vertical: isSmallScreen ? 10 : 12,
+                    ),
+                    textStyle: TextStyle(
+                      fontSize: isSmallScreen ? 12 : 14,
+                    ),
+                  ),
+                  child: const Text('SUBMIT'),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
-  Widget _buildFormField(String label, Widget field, {required double width}) {
+  Widget _buildFormField(String label, Widget field, {required double width, required double labelSize}) {
     return Container(
       width: width,
       child: Column(
@@ -458,7 +534,7 @@ class _AddstaffState extends State<Addstaff> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            style: TextStyle(fontSize: labelSize, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 4),
           field,
@@ -470,6 +546,7 @@ class _AddstaffState extends State<Addstaff> {
   Widget _buildTextField({
     required TextEditingController controller,
     required String hintText,
+    required double hintSize,
   }) {
     return TextField(
       controller: controller,
@@ -477,7 +554,7 @@ class _AddstaffState extends State<Addstaff> {
         hintText: hintText,
         hintStyle: TextStyle(
           fontWeight: FontWeight.w600,
-          fontSize: 10,
+          fontSize: hintSize,
           color: Colors.grey,
         ),
         border: OutlineInputBorder(
@@ -505,6 +582,7 @@ class _AddstaffState extends State<Addstaff> {
     required String? value,
     required Function(String?) onChanged,
     required List<String> items,
+    required double hintSize,
   }) {
     return DropdownButtonFormField<String>(
       value: value,
@@ -512,7 +590,7 @@ class _AddstaffState extends State<Addstaff> {
         hintText,
         style: TextStyle(
           fontWeight: FontWeight.w600,
-          fontSize: 10,
+          fontSize: hintSize,
           color: Colors.grey,
         ),
       ),
@@ -535,16 +613,17 @@ class _AddstaffState extends State<Addstaff> {
         ),
       ),
       onChanged: onChanged,
-      items:
-          items.map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(value: value, child: Text(value));
-          }).toList(),
+      items: items.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(value: value, child: Text(value));
+      }).toList(),
+      isExpanded: true, // Ensures the dropdown takes full width
     );
   }
 
   Widget _buildDateField({
     required TextEditingController controller,
     required String hintText,
+    required double hintSize,
   }) {
     return TextField(
       controller: controller,
@@ -552,7 +631,7 @@ class _AddstaffState extends State<Addstaff> {
         hintText: hintText,
         hintStyle: TextStyle(
           fontWeight: FontWeight.w600,
-          fontSize: 10,
+          fontSize: hintSize,
           color: Colors.grey,
         ),
         border: OutlineInputBorder(

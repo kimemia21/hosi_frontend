@@ -204,7 +204,20 @@ class _DoctorsListPageState extends State<DoctorsListPage> {
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: () {
-                            
+                              showAlerts(
+                                context,
+                                Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius:
+                                        BorderRadiusDirectional.circular(20),
+                                  ),
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.6,
+                                  height:
+                                      MediaQuery.of(context).size.height * 0.75,
+                                  child: Addstaff(),
+                                ),
+                              );
                             },
                             icon: const Icon(Icons.add),
                             label: const Text('Add new staff'),
@@ -245,11 +258,24 @@ class _DoctorsListPageState extends State<DoctorsListPage> {
                         ),
                         ElevatedButton.icon(
                           onPressed: () {
-                              print("pressed");
-                              showAlerts(context, Addstaff());
+                            showAlerts(
+                              context,
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius:
+                                      BorderRadiusDirectional.circular(20),
+                                ),
+
+                                width: MediaQuery.of(context).size.width * 0.6,
+                                height:
+                                    MediaQuery.of(context).size.height * 0.75,
+                                child: Addstaff(),
+                              ),
+                            );
                           },
                           icon: const Icon(Icons.add),
-                          label: const Text('Add new doctor'),
+                          label: const Text('Add new Staff'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFF6A9969),
                             foregroundColor: Colors.white,
