@@ -40,16 +40,12 @@ class Comms {
     required String endpoint,
     bool? isServer,
   }) async {
-    final String url = "${serverUrl}/$endpoint";
+    final String url = "${isServer!=null? serverUrl:baseUrl}/$endpoint";
     try {
       print("Hitting endpoint: $url");
-
       final response = await dio.get(url);
 
-
-
       if (response.statusCode == 200) {
-
         return {"success": true, "rsp": response.data};
       } else if (response.statusCode == 400) {
         // Handle bad request errors
