@@ -37,6 +37,7 @@ dependencies:
   adaptive_navigation: ^0.0.10
   another_stepper: ^1.2.2
   intl: ^0.20.2
+  dio: ^5.8.0+1
 
 dev_dependencies:
   flutter_test:

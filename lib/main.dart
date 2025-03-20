@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/Departments/AddDept.dart';
 import 'package:frontend/Homepage/NavBar.dart';
 import 'package:frontend/staff/AddStaff.dart';
 
@@ -18,9 +19,9 @@ class MyApp extends StatelessWidget {
           primary: const Color(0xFF2E5F30),
         ),
       ),
-      home: 
+      home: AddDepartment(),
       //  Addstaff(),
-     const AppNavBar(),
+    //  const AppNavBar(),
       debugShowCheckedModeBanner: false,
     );
   }
