@@ -12,16 +12,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Green Navigation Bar',
-      theme: ThemeData(
-        primaryColor: const Color(0xFF2E5F30), // Dark green color from image
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2E5F30),
-          primary: const Color(0xFF2E5F30),
-        ),
-      ),
-      home: AddDepartment(),
+      // theme: ThemeData(
+      //   // primaryColor: const Color(0xFF2E5F30), // Dark green color from image
+      //   // colorScheme: ColorScheme.fromSeed(
+      //   //   seedColor: const Color(0xFF2E5F30),
+      //   //   primary: const Color(0xFF2E5F30),
+      //   ),
+      // ),
+      home: 
+      //  AddDepartment(),
       //  Addstaff(),
-    //  const AppNavBar(),
+     const AppNavBar(),
       debugShowCheckedModeBanner: false,
     );
   }
