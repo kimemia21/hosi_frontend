@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/CustomDropdown.dart';
 import 'package:frontend/Globals.dart';
+import 'package:frontend/Model/Departments.dart';
+import 'package:frontend/Model/DeptOnline.dart';
 import 'package:frontend/creds.dart';
+import 'package:frontend/utils/ReqGlobal.dart';
 import 'package:intl/intl.dart';
 
 class Addstaff extends StatefulWidget {
@@ -12,6 +16,10 @@ class Addstaff extends StatefulWidget {
 
 class _AddstaffState extends State<Addstaff> {
   int _currentStep = 0;
+
+  late Future<List<Department>> _departmentsFuture;
+  String? _selectedDeptId;
+
   final List<String> _stepTitles = [
     'Basic Information',
     'Official info',
@@ -28,6 +36,19 @@ class _AddstaffState extends State<Addstaff> {
 
   String? _selectedUserType;
   String? _selectedGender;
+  String _description = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _departmentsFuture = fetchGlobal<Department>(
+      getRequests: (endpoint) => comms.getRequests(endpoint: endpoint),
+      fromJson: (json) => Department.fromJson(json),
+      endpoint: "api/departments",
+    );
+  }
+
+
 
   @override
   void dispose() {
@@ -55,24 +76,23 @@ class _AddstaffState extends State<Addstaff> {
     }
   }
 
-
-   Widget _buildDepartmentDropdown({
+  Widget _buildDepartmentDropdown({
     required String hintText,
     required String? value,
     required Function(String?) onChanged,
-    required List<DepartmentOnline> items,
+    required List<Department> items,
     required double hintSize,
     String? Function(String?)? validator,
     double? maxWidth,
-   }) {
-    return CustomDropdown<DepartmentOnline>(
+  }) {
+    return CustomDropdown<Department>(
       hintText: hintText,
       value: value,
       onChanged: (newValue, selectedItem) {
         if (selectedItem != null) {
           setState(() {
             _description = selectedItem.description;
-            _iconData = selectedItem.iconName;
+            // _iconData = selectedItem.iconName;
           });
         }
         onChanged(newValue);
@@ -83,11 +103,11 @@ class _AddstaffState extends State<Addstaff> {
       validator: validator,
       buildListItem: (
         BuildContext context,
-        DepartmentOnline dept,
+        Department dept,
         bool isSelected,
         bool isSmallScreen,
       ) {
-        final IconData iconData = _getIconData(dept.iconName.split('.').last);
+        final IconData iconData = getIconData(dept.iconData.split('.').last);
         final titleFontSize = isSmallScreen ? 14.0 : 16.0;
         final descFontSize = isSmallScreen ? 10.0 : 12.0;
 
@@ -142,7 +162,6 @@ class _AddstaffState extends State<Addstaff> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -505,61 +524,103 @@ class _AddstaffState extends State<Addstaff> {
   }
 
   Widget _buildServicesStep() {
-    return LayoutBuilder(
+       return LayoutBuilder(
       builder: (context, constraints) {
+        // Get responsive sizes
         final ResponsiveSizes sizes = getResponsiveSizes(constraints.maxWidth);
+        final bool isMobileLayout = constraints.maxWidth < 768;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStepHeading('Select Services', sizes.headingSize),
+            _buildStepHeading('Departments info', sizes.headingSize),
             SizedBox(height: sizes.verticalSpacing),
+            Wrap(
+              spacing: 16,
+              runSpacing: 16,
+              children: [
+                  FutureBuilder<List<Department>>(
+                  future: _departmentsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox(
+                        height: 56,
+                        child: Center(child: CircularProgressIndicator()),
+                      );
+                    }
 
+                    if (snapshot.hasError) {
+                      return Text(
+                        "Error loading departments: ${snapshot.error}",
+                      );
+                    }
 
-            // FutureBuilder<List<DepartmentOnline>>(
-            //       future: _departmentsFuture,
-            //       builder: (context, snapshot) {
-            //         if (snapshot.connectionState == ConnectionState.waiting) {
-            //           return const SizedBox(
-            //             height: 56,
-            //             child: Center(child: CircularProgressIndicator()),
-            //           );
-            //         }
-
-            //         if (snapshot.hasError) {
-            //           return Text(
-            //             "Error loading departments: ${snapshot.error}",
-            //           );
-            //         }
-
-            //         return _buildFormField(
-            //           'Department Type',
-            //           _buildDepartmentDropdown(
-            //             hintText: "Select Department",
-            //             value: _selectedDeptType,
-            //             onChanged: (value) {
-            //               setState(() {
-            //                 _selectedDeptType = value;
-            //               });
-            //             },
-            //             items: snapshot.data ?? [],
-            //             hintSize: hintSize,
-            //             validator: (value) {
-            //               if (value == null || value.isEmpty) {
-            //                 return 'Please select a department';
-            //               }
-            //               return null;
-            //             },
-            //           ),
-            //           width: constraints.maxWidth,
-            //           labelSize: labelSize,
-            //         );
-            //       },
-            //     ),
-
-
-            
-            // Add form fields for services step
+                    return _buildFormField(
+                      'Department Type',
+                      _buildDepartmentDropdown(
+                        hintText: "Select Department",
+                        value: _selectedDeptId,
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedDeptId = value;
+                          });
+                        },
+                        items: snapshot.data ?? [],
+                        hintSize: 40,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please select a department';
+                          }
+                          return null;
+                        },
+                      ),
+                      width: constraints.maxWidth,
+                      labelSize: 40,
+                    );
+                  },
+                ),
+             
+                _buildFormField(
+                  'ID number',
+                  _buildTextField(
+                    controller: _lastNameController,
+                    hintText: 'ID number',
+                    hintSize: sizes.hintSize,
+                  ),
+                  width:
+                      isMobileLayout
+                          ? constraints.maxWidth
+                          : (constraints.maxWidth - 16) / 2,
+                  labelSize: sizes.labelSize,
+                ),
+                _buildFormField(
+                  'Phone number',
+                  _buildTextField(
+                    controller: _firstNameController,
+                    hintText: 'Phone Number',
+                    hintSize: sizes.hintSize,
+                  ),
+                  width:
+                      isMobileLayout
+                          ? constraints.maxWidth
+                          : (constraints.maxWidth - 16) / 2,
+                  labelSize: sizes.labelSize,
+                ),
+                _buildFormField(
+                  'email adress',
+                  _buildTextField(
+                    controller: _designationController,
+                    hintText: 'email adress',
+                    hintSize: sizes.hintSize,
+                  ),
+                  width:
+                      isMobileLayout
+                          ? constraints.maxWidth
+                          : (constraints.maxWidth - 16) / 2,
+                  labelSize: sizes.labelSize,
+                ),
+              ],
+            ),
             SizedBox(height: sizes.verticalSpacing),
             _buildNavigationButtons(previousVisible: true, sizes: sizes),
           ],

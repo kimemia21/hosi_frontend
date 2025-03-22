@@ -6,6 +6,7 @@ import 'package:frontend/Model/DeptOnline.dart';
 import 'package:frontend/Model/Staff.dart';
 import 'package:frontend/creds.dart';
 import 'package:frontend/requests/Comms.dart';
+import 'package:frontend/utils/ReqGlobal.dart';
 
 class AddDepartment extends StatefulWidget {
   const AddDepartment({Key? key}) : super(key: key);
@@ -50,59 +51,18 @@ class _AddDepartmentState extends State<AddDepartment> {
   @override
   void initState() {
     super.initState();
-    _departmentsFuture = _fetchDepartments();
-    _staffFuture = _fetchStaff();
+    // network call to fetch departments
+    _departmentsFuture = fetchDepartmentsOnline(cachedDepartments: _cachedDepartments);
+    // network call to fetch staff
+    _staffFuture = fetchGlobal<StaffModel>(
+     
+      getRequests: (endpoint) => comms.getRequests(endpoint: endpoint),
+      fromJson: (json) => StaffModel.fromJson(json),
+      endpoint: "api/staff"
+    );
+ 
   }
 
-  // Optimized departments fetch with caching
-  Future<List<DepartmentOnline>> _fetchDepartments() async {
-    if (_cachedDepartments != null) {
-      return _cachedDepartments!;
-    }
-
-    try {
-      final depts = await comms.getRequests(
-        endpoint: "online/departments",
-        isServer: true,
-      );
-
-      if (depts["success"]) {
-        List data = depts["rsp"]["data"]["departments"];
-        _cachedDepartments =
-            data.map((dpt) => DepartmentOnline.fromJson(dpt)).toList();
-        return _cachedDepartments!;
-      } else {
-        debugPrint("Error fetching departments: ${depts["rsp"]}");
-        return [];
-      }
-    } catch (e) {
-      debugPrint("Exception fetching departments: $e");
-      return [];
-    }
-  }
-
-  // Optimized staff fetch with caching
-  Future<List<StaffModel>> _fetchStaff() async {
-    if (_cachedStaff != null) {
-      return _cachedStaff!;
-    }
-
-    try {
-      final staffData = await comms.getRequests(endpoint: "api/staff");
-
-      if (staffData["success"]) {
-        List data = staffData["rsp"]["data"];
-        _cachedStaff = data.map((staff) => StaffModel.fromJson(staff)).toList();
-        return _cachedStaff!;
-      } else {
-        debugPrint("Error fetching staff: ${staffData["rsp"]}");
-        return [];
-      }
-    } catch (e) {
-      debugPrint("Exception fetching staff: $e");
-      return [];
-    }
-  }
 
   Future<void> _submitForm() async {
     // Reset states
@@ -122,11 +82,11 @@ class _AddDepartmentState extends State<AddDepartment> {
     }
 
     // Validate required fields
-    if (_selectedDeptType == null || 
-        _description.isEmpty || 
-        _locationController.text.trim().isEmpty || 
-        _selectedHeadOfDept == null || 
-        _iconData.isEmpty || 
+    if (_selectedDeptType == null ||
+        _description.isEmpty ||
+        _locationController.text.trim().isEmpty ||
+        _selectedHeadOfDept == null ||
+        _iconData.isEmpty ||
         _selectedHeadId == 0) {
       setState(() {
         _isLoading = false;
@@ -171,7 +131,8 @@ class _AddDepartmentState extends State<AddDepartment> {
   void _handleFailedSubmission(String? message) {
     setState(() {
       _isLoading = false;
-      _errorMessage = "Failed to create department: ${message ?? 'Unknown error'}";
+      _errorMessage =
+          "Failed to create department: ${message ?? 'Unknown error'}";
     });
   }
 
@@ -396,7 +357,7 @@ class _AddDepartmentState extends State<AddDepartment> {
                           children: [
                             Icon(
                               _iconData.isNotEmpty
-                                  ? _getIconData(_iconData.split('.').last)
+                                  ? getIconData(_iconData.split('.').last)
                                   : Icons.local_hospital,
                               color: Colors.blue[700],
                               size: 20,
@@ -621,7 +582,7 @@ class _AddDepartmentState extends State<AddDepartment> {
     required double hintSize,
     String? Function(String?)? validator,
     double? maxWidth,
-   }) {
+  }) {
     return CustomDropdown<DepartmentOnline>(
       hintText: hintText,
       value: value,
@@ -644,7 +605,7 @@ class _AddDepartmentState extends State<AddDepartment> {
         bool isSelected,
         bool isSmallScreen,
       ) {
-        final IconData iconData = _getIconData(dept.iconName.split('.').last);
+        final IconData iconData = getIconData(dept.iconName.split('.').last);
         final titleFontSize = isSmallScreen ? 14.0 : 16.0;
         final descFontSize = isSmallScreen ? 10.0 : 12.0;
 
@@ -708,7 +669,7 @@ class _AddDepartmentState extends State<AddDepartment> {
     required double hintSize,
     String? Function(String?)? validator,
     double? maxWidth,
-    }) {
+  }) {
     return CustomDropdown<StaffModel>(
       hintText: hintText,
       value: value,
@@ -855,53 +816,5 @@ class _AddDepartmentState extends State<AddDepartment> {
         );
       },
     );
-  }
-
-  // Helper function to map icon names to IconData
-  IconData _getIconData(String iconName) {
-    switch (iconName) {
-      case 'local_hospital':
-        return Icons.local_hospital;
-      case 'medical_services':
-        return Icons.medical_services;
-      case 'healing':
-        return Icons.healing;
-      case 'child_care':
-        return Icons.child_care;
-      case 'pregnant_woman':
-        return Icons.pregnant_woman;
-      case 'favorite':
-        return Icons.favorite;
-      case 'psychology':
-        return Icons.psychology;
-      case 'accessibility':
-        return Icons.accessibility;
-      case 'face':
-        return Icons.face;
-      case 'visibility':
-        return Icons.visibility;
-      case 'hearing':
-        return Icons.hearing;
-      case 'water_drop':
-        return Icons.water_drop;
-      case 'mood':
-        return Icons.mood;
-      case 'biotech':
-        return Icons.biotech;
-      case 'radio':
-        return Icons.radio;
-      case 'bedtime':
-        return Icons.bedtime;
-      case 'fitness_center':
-        return Icons.fitness_center;
-      case 'medication':
-        return Icons.medication;
-      case 'science':
-        return Icons.science;
-      case 'restaurant_menu':
-        return Icons.restaurant_menu;
-      default:
-        return Icons.local_hospital;
-    }
   }
 }
