@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/CustomDropdown.dart';
 import 'package:frontend/Globals.dart';
 import 'package:frontend/Model/Departments.dart';
-import 'package:frontend/Model/DeptOnline.dart';
 import 'package:frontend/creds.dart';
 import 'package:frontend/utils/ReqGlobal.dart';
 import 'package:intl/intl.dart';
@@ -19,6 +18,28 @@ class _AddstaffState extends State<Addstaff> {
 
   late Future<List<Department>> _departmentsFuture;
   String? _selectedDeptId;
+  String _iconData = "";
+  String _deptName = "";
+  String? _role;
+  
+  // Define form keys for validation
+  final _basicInfoFormKey = GlobalKey<FormState>();
+  final _officialInfoFormKey = GlobalKey<FormState>();
+  final _departmentInfoFormKey = GlobalKey<FormState>();
+
+  // Shared form field properties
+  final _borderRadius = BorderRadius.circular(4);
+  
+  final List<String> _roles = [
+    'Doctor',
+    'Nurse',
+    'Pharmacist',
+    'Lab Technician',
+    'Receptionist',
+    'Cleaner',
+    'Security',
+    'Other',
+  ];
 
   final List<String> _stepTitles = [
     'Basic Information',
@@ -31,11 +52,13 @@ class _AddstaffState extends State<Addstaff> {
   final TextEditingController _firstNameController = TextEditingController();
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _designationController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _licenceNumberController = TextEditingController();
+  final TextEditingController _idNumberController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
 
-  String? _selectedUserType;
   String? _selectedGender;
+
   String _description = "";
 
   @override
@@ -48,23 +71,39 @@ class _AddstaffState extends State<Addstaff> {
     );
   }
 
-
-
   @override
   void dispose() {
     _firstNameController.dispose();
     _lastNameController.dispose();
     _emailController.dispose();
-    _designationController.dispose();
+    _phoneController.dispose();
+    _licenceNumberController.dispose();
+    _idNumberController.dispose();
     _dateController.dispose();
     super.dispose();
   }
 
   void _nextStep() {
-    if (_currentStep < _stepTitles.length - 1) {
-      setState(() {
-        _currentStep += 1;
-      });
+    // Validate current step before proceeding
+    if (_validateCurrentStep()) {
+      if (_currentStep < _stepTitles.length - 1) {
+        setState(() {
+          _currentStep += 1;
+        });
+      }
+    }
+  }
+
+  bool _validateCurrentStep() {
+    switch (_currentStep) {
+      case 0:
+        return _basicInfoFormKey.currentState?.validate() ?? false;
+      case 1:
+        return _officialInfoFormKey.currentState?.validate() ?? false;
+      case 2:
+        return _departmentInfoFormKey.currentState?.validate() ?? false;
+      default:
+        return true;
     }
   }
 
@@ -83,7 +122,6 @@ class _AddstaffState extends State<Addstaff> {
     required List<Department> items,
     required double hintSize,
     String? Function(String?)? validator,
-    double? maxWidth,
   }) {
     return CustomDropdown<Department>(
       hintText: hintText,
@@ -92,7 +130,8 @@ class _AddstaffState extends State<Addstaff> {
         if (selectedItem != null) {
           setState(() {
             _description = selectedItem.description;
-            // _iconData = selectedItem.iconName;
+            _deptName = selectedItem.name;
+            _iconData = selectedItem.iconData;
           });
         }
         onChanged(newValue);
@@ -101,92 +140,89 @@ class _AddstaffState extends State<Addstaff> {
       getLabel: (item) => item.name,
       getSearchableTerms: (item) => [item.name, item.description],
       validator: validator,
-      buildListItem: (
-        BuildContext context,
-        Department dept,
-        bool isSelected,
-        bool isSmallScreen,
-      ) {
-        final IconData iconData = getIconData(dept.iconData.split('.').last);
-        final titleFontSize = isSmallScreen ? 14.0 : 16.0;
-        final descFontSize = isSmallScreen ? 10.0 : 12.0;
+      buildListItem: _buildDepartmentListItem,
+    );
+  }
 
-        return Row(
-          children: [
-            Icon(
-              iconData,
-              size: isSmallScreen ? 20 : 24,
-              color: Theme.of(context).primaryColor,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    dept.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: titleFontSize,
-                      color: Theme.of(context).textTheme.bodyLarge?.color,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  if (!isSmallScreen || MediaQuery.of(context).size.width > 350)
-                    Column(
-                      children: [
-                        const SizedBox(height: 2),
-                        Text(
-                          dept.description,
-                          style: TextStyle(
-                            fontSize: descFontSize,
-                            color: Colors.grey[600],
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: isSmallScreen ? 1 : 2,
-                        ),
-                      ],
-                    ),
-                ],
+  Widget _buildDepartmentListItem(
+    BuildContext context,
+    Department dept,
+    bool isSelected,
+    bool isSmallScreen,
+  ) {
+    final IconData iconData = getIconData(dept.iconData.split('.').last);
+    final titleFontSize = isSmallScreen ? 14.0 : 16.0;
+    final descFontSize = isSmallScreen ? 10.0 : 12.0;
+
+    return Row(
+      children: [
+        Icon(
+          iconData,
+          size: isSmallScreen ? 20 : 24,
+          color: Theme.of(context).primaryColor,
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                dept.name,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: titleFontSize,
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-            if (isSelected)
-              Icon(
-                Icons.check,
-                color: Theme.of(context).primaryColor,
-                size: isSmallScreen ? 20 : 24,
-              ),
-          ],
-        );
-      },
+              if (!isSmallScreen || MediaQuery.of(context).size.width > 350)
+                Column(
+                  children: [
+                    const SizedBox(height: 2),
+                    Text(
+                      dept.description,
+                      style: TextStyle(
+                        fontSize: descFontSize,
+                        color: Colors.grey[600],
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: isSmallScreen ? 1 : 2,
+                    ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+        if (isSelected)
+          Icon(
+            Icons.check,
+            color: Theme.of(context).primaryColor,
+            size: isSmallScreen ? 20 : 24,
+          ),
+      ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    // Get screen size
     final screenSize = MediaQuery.of(context).size;
-
+    
     // Determine container width based on screen size
     double containerWidth = screenSize.width;
     double containerHeight = screenSize.height;
 
     // For very large screens, cap the width
-    if (screenSize.width > 1000) {
-      containerWidth = screenSize.width * 0.74;
-    } else if (screenSize.width > 900) {
-      containerWidth = screenSize.width * 0.75;
-    } else {
-      containerWidth = screenSize.width * 0.9;
-    }
+    containerWidth = screenSize.width > 1000 
+        ? screenSize.width * 0.74 
+        : screenSize.width > 900 
+            ? screenSize.width * 0.75 
+            : screenSize.width * 0.9;
 
     // Set container height based on screen size
-    if (screenSize.height > 900) {
-      containerHeight = screenSize.height * 0.75;
-    } else {
-      containerHeight = screenSize.height * 0.85;
-    }
+    containerHeight = screenSize.height > 900 
+        ? screenSize.height * 0.75 
+        : screenSize.height * 0.85;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -213,16 +249,11 @@ class _AddstaffState extends State<Addstaff> {
   Widget _buildFormContent(BuildContext context) {
     // Form content width determined by screen size
     final screenWidth = MediaQuery.of(context).size.width;
-    double formWidth = screenWidth;
-
-    // Adjust based on screen size
-    if (screenWidth > 1400) {
-      formWidth = 1000;
-    } else if (screenWidth > 900) {
-      formWidth = screenWidth * 0.7;
-    } else {
-      formWidth = screenWidth * 0.9;
-    }
+    double formWidth = screenWidth > 1400 
+        ? 1000 
+        : screenWidth > 900 
+            ? screenWidth * 0.7 
+            : screenWidth * 0.9;
 
     return Center(
       child: ConstrainedBox(
@@ -269,8 +300,7 @@ class _AddstaffState extends State<Addstaff> {
                           height: stepIndicatorSize,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color:
-                                isActive ? primaryColor : Colors.grey.shade300,
+                            color: isActive ? primaryColor : Colors.grey.shade300,
                           ),
                           child: Center(
                             child: Text(
@@ -289,10 +319,7 @@ class _AddstaffState extends State<Addstaff> {
                             _stepTitles[stepIndex],
                             style: TextStyle(
                               fontSize: titleFontSize,
-                              fontWeight:
-                                  isActive
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
+                              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                               color: isActive ? primaryColor : Colors.grey,
                             ),
                             textAlign: TextAlign.center,
@@ -328,8 +355,7 @@ class _AddstaffState extends State<Addstaff> {
                         _stepTitles[index],
                         style: TextStyle(
                           fontSize: titleFontSize,
-                          fontWeight:
-                              isActive ? FontWeight.bold : FontWeight.normal,
+                          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
                           color: isActive ? primaryColor : Colors.grey,
                         ),
                         textAlign: TextAlign.center,
@@ -367,79 +393,93 @@ class _AddstaffState extends State<Addstaff> {
         final ResponsiveSizes sizes = getResponsiveSizes(constraints.maxWidth);
         final bool isMobileLayout = constraints.maxWidth < 768;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStepHeading('Basic information', sizes.headingSize),
-            SizedBox(height: sizes.verticalSpacing),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                _buildFormField(
-                  'First name',
-                  _buildTextField(
-                    controller: _firstNameController,
-                    hintText: ' first name',
-                    hintSize: sizes.hintSize,
+        return Form(
+          key: _basicInfoFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStepHeading('Basic information', sizes.headingSize),
+              SizedBox(height: sizes.verticalSpacing),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  _buildFormField(
+                    'First name',
+                    _buildValidatedTextField(
+                      controller: _firstNameController,
+                      hintText: 'First name',
+                      hintSize: sizes.hintSize,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'First name is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    labelSize: sizes.labelSize,
                   ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-                _buildFormField(
-                  'Last name',
-                  _buildTextField(
-                    controller: _lastNameController,
-                    hintText: ' last name',
-                    hintSize: sizes.hintSize,
+                  _buildFormField(
+                    'Last name',
+                    _buildValidatedTextField(
+                      controller: _lastNameController,
+                      hintText: 'Last name',
+                      hintSize: sizes.hintSize,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Last name is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    labelSize: sizes.labelSize,
                   ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-                _buildFormField(
-                  'Gender',
-                  _buildDropdownField(
-                    hintText: 'Select gender',
-                    value: _selectedGender,
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedGender = value;
-                      });
-                    },
-                    items: ['Male', 'Female'],
-                    hintSize: sizes.hintSize,
+                  _buildFormField(
+                    'Gender',
+                    _buildValidatedDropdownField(
+                      hintText: 'Select gender',
+                      value: _selectedGender,
+                      onChanged: (value) {
+                        setState(() {
+                          _selectedGender = value;
+                        });
+                      },
+                      items: ['Male', 'Female'],
+                      hintSize: sizes.hintSize,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Gender is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    labelSize: sizes.labelSize,
                   ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-
-                _buildFormField(
-                  'Date of birth',
-                  _buildDateField(
-                    controller: _dateController,
-                    hintText: 'Select date of birth',
-                    hintSize: sizes.hintSize,
+                  _buildFormField(
+                    'Date of birth',
+                    _buildValidatedDateField(
+                      controller: _dateController,
+                      hintText: 'Select date of birth',
+                      hintSize: sizes.hintSize,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Date of birth is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    labelSize: sizes.labelSize,
                   ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-              ],
-            ),
-            SizedBox(height: sizes.verticalSpacing),
-            _buildNavigationButtons(previousVisible: false, sizes: sizes),
-          ],
+                ],
+              ),
+              SizedBox(height: sizes.verticalSpacing),
+              _buildNavigationButtons(previousVisible: false, sizes: sizes),
+            ],
+          ),
         );
       },
     );
@@ -452,180 +492,234 @@ class _AddstaffState extends State<Addstaff> {
         final ResponsiveSizes sizes = getResponsiveSizes(constraints.maxWidth);
         final bool isMobileLayout = constraints.maxWidth < 768;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildStepHeading('Official info', sizes.headingSize),
-            SizedBox(height: sizes.verticalSpacing),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
-              children: [
-                _buildFormField(
-                  'Licence Number(optional)',
-                  _buildTextField(
-                    controller: _firstNameController,
-                    hintText: 'Licence Number',
-                    hintSize: sizes.hintSize,
+        return Form(
+          key: _officialInfoFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStepHeading('Official info', sizes.headingSize),
+              SizedBox(height: sizes.verticalSpacing),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  _buildFormField(
+                    'Licence Number (optional)',
+                    _buildValidatedTextField(
+                      controller: _licenceNumberController,
+                      hintText: 'Licence Number',
+                      hintSize: sizes.hintSize,
+                      validator: (value) => null, // Optional field
+                    ),
+                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    labelSize: sizes.labelSize,
                   ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-                _buildFormField(
-                  'ID number',
-                  _buildTextField(
-                    controller: _lastNameController,
-                    hintText: 'ID number',
-                    hintSize: sizes.hintSize,
+                  _buildFormField(
+                    'ID number',
+                    _buildValidatedTextField(
+                      controller: _idNumberController,
+                      hintText: 'ID number',
+                      hintSize: sizes.hintSize,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'ID number is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    labelSize: sizes.labelSize,
                   ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-                _buildFormField(
-                  'Phone number',
-                  _buildTextField(
-                    controller: _firstNameController,
-                    hintText: 'Phone Number',
-                    hintSize: sizes.hintSize,
+                  _buildFormField(
+                    'Phone number',
+                    _buildValidatedTextField(
+                      controller: _phoneController,
+                      hintText: 'Phone Number',
+                      hintSize: sizes.hintSize,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Phone number is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    labelSize: sizes.labelSize,
                   ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-                _buildFormField(
-                  'email adress',
-                  _buildTextField(
-                    controller: _designationController,
-                    hintText: 'email adress',
-                    hintSize: sizes.hintSize,
+                  _buildFormField(
+                    'Email address',
+                    _buildValidatedTextField(
+                      controller: _emailController,
+                      hintText: 'Email address',
+                      hintSize: sizes.hintSize,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Email address is required';
+                        }
+                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                          return 'Enter a valid email address';
+                        }
+                        return null;
+                      },
+                    ),
+                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    labelSize: sizes.labelSize,
                   ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-              ],
-            ),
-            SizedBox(height: sizes.verticalSpacing),
-            _buildNavigationButtons(previousVisible: true, sizes: sizes),
-          ],
+                ],
+              ),
+              SizedBox(height: sizes.verticalSpacing),
+              _buildNavigationButtons(previousVisible: true, sizes: sizes),
+            ],
+          ),
         );
       },
     );
   }
 
   Widget _buildServicesStep() {
-       return LayoutBuilder(
+    return LayoutBuilder(
       builder: (context, constraints) {
         // Get responsive sizes
         final ResponsiveSizes sizes = getResponsiveSizes(constraints.maxWidth);
         final bool isMobileLayout = constraints.maxWidth < 768;
 
-        return Column(
+        return Form(
+          key: _departmentInfoFormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildStepHeading('Departments info', sizes.headingSize),
+              SizedBox(height: sizes.verticalSpacing),
+              Wrap(
+                spacing: 16,
+                runSpacing: 16,
+                children: [
+                  FutureBuilder<List<Department>>(
+                    future: _departmentsFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const SizedBox(
+                          height: 56,
+                          child: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      if (snapshot.hasError) {
+                        return Text(
+                          "Error loading departments: ${snapshot.error}",
+                        );
+                      }
+
+                      return Column(
+                        children: [
+                          _buildFormField(
+                            'Department',
+                            _buildDepartmentDropdown(
+                              hintText: "Select Department",
+                              value: _selectedDeptId,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedDeptId = value;
+                                });
+                              },
+                              items: snapshot.data ?? [],
+                              hintSize: sizes.hintSize,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a department';
+                                }
+                                return null;
+                              },
+                            ),
+                            width: constraints.maxWidth,
+                            labelSize: sizes.labelSize,
+                          ),
+                          SizedBox(height: 16),
+                          _buildDepartmentInfoCard(constraints.maxWidth),
+                        ],
+                      );
+                    },
+                  ),
+
+                  _buildFormField(
+                    'Staff Role',
+                    _buildValidatedDropdownField(
+                      hintText: "Role",
+                      value: _role,
+                      onChanged: (value) {
+                        setState(() {
+                          _role = value;
+                        });
+                      },
+                      items: _roles,
+                      hintSize: sizes.hintSize,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Staff role is required';
+                        }
+                        return null;
+                      },
+                    ),
+                    width: isMobileLayout ? constraints.maxWidth : constraints.maxWidth,
+                    labelSize: sizes.labelSize,
+                  ),
+                ],
+              ),
+              SizedBox(height: sizes.verticalSpacing),
+              _buildNavigationButtons(previousVisible: true, sizes: sizes),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDepartmentInfoCard(double width) {
+    return Visibility(
+      visible: _description.isNotEmpty,
+      child: Container(
+        width: width,
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.blue.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.blue.shade200),
+        ),
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildStepHeading('Departments info', sizes.headingSize),
-            SizedBox(height: sizes.verticalSpacing),
-            Wrap(
-              spacing: 16,
-              runSpacing: 16,
+            Row(
               children: [
-                  FutureBuilder<List<Department>>(
-                  future: _departmentsFuture,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const SizedBox(
-                        height: 56,
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-
-                    if (snapshot.hasError) {
-                      return Text(
-                        "Error loading departments: ${snapshot.error}",
-                      );
-                    }
-
-                    return _buildFormField(
-                      'Department Type',
-                      _buildDepartmentDropdown(
-                        hintText: "Select Department",
-                        value: _selectedDeptId,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedDeptId = value;
-                          });
-                        },
-                        items: snapshot.data ?? [],
-                        hintSize: 40,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a department';
-                          }
-                          return null;
-                        },
-                      ),
-                      width: constraints.maxWidth,
-                      labelSize: 40,
-                    );
-                  },
+                Icon(
+                  _iconData.isNotEmpty
+                      ? getIconData(_iconData.split('.').last)
+                      : Icons.local_hospital,
+                  color: Colors.blue[700],
+                  size: 20,
                 ),
-             
-                _buildFormField(
-                  'ID number',
-                  _buildTextField(
-                    controller: _lastNameController,
-                    hintText: 'ID number',
-                    hintSize: sizes.hintSize,
+                SizedBox(width: 8),
+                Text(
+                  _deptName.isNotEmpty ? _deptName : "Department",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: Colors.blue[700],
                   ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-                _buildFormField(
-                  'Phone number',
-                  _buildTextField(
-                    controller: _firstNameController,
-                    hintText: 'Phone Number',
-                    hintSize: sizes.hintSize,
-                  ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
-                ),
-                _buildFormField(
-                  'email adress',
-                  _buildTextField(
-                    controller: _designationController,
-                    hintText: 'email adress',
-                    hintSize: sizes.hintSize,
-                  ),
-                  width:
-                      isMobileLayout
-                          ? constraints.maxWidth
-                          : (constraints.maxWidth - 16) / 2,
-                  labelSize: sizes.labelSize,
                 ),
               ],
             ),
-            SizedBox(height: sizes.verticalSpacing),
-            _buildNavigationButtons(previousVisible: true, sizes: sizes),
+            SizedBox(height: 8),
+            Text(
+              _description,
+              style: TextStyle(
+                fontSize: 12,
+                color: Colors.grey[600],
+                height: 1.5,
+              ),
+            ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
@@ -640,8 +734,68 @@ class _AddstaffState extends State<Addstaff> {
           children: [
             _buildStepHeading('Review and Submit', sizes.headingSize),
             SizedBox(height: sizes.verticalSpacing),
-            // Add review summary
+            
+            // Review Card
+            Container(
+              width: constraints.maxWidth,
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    spreadRadius: 1,
+                    blurRadius: 5,
+                    offset: Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Personal Info Section
+                  _buildReviewSection(
+                    "Personal Information",
+                    Icons.person,
+                    [
+                      ReviewField("Name", "${_firstNameController.text} ${_lastNameController.text}"),
+                      ReviewField("Gender", _selectedGender ?? "Not provided"),
+                      ReviewField("Date of Birth", _dateController.text),
+                    ],
+                  ),
+
+                  Divider(height: 32, thickness: 1),
+
+                  // Official Info Section
+                  _buildReviewSection(
+                    "Official Information",
+                    Icons.badge,
+                    [
+                      ReviewField("ID Number", _idNumberController.text),
+                      ReviewField("License Number", _licenceNumberController.text.isEmpty ? "Not provided" : _licenceNumberController.text),
+                      ReviewField("Phone Number", _phoneController.text),
+                      ReviewField("Email", _emailController.text),
+                    ],
+                  ),
+
+                  Divider(height: 32, thickness: 1),
+
+                  // Department Info Section
+                  _buildReviewSection(
+                    "Department Information",
+                    _iconData.isNotEmpty ? getIconData(_iconData.split('.').last) : Icons.local_hospital,
+                    [
+                      ReviewField("Department", _deptName.isEmpty ? "Not selected" : _deptName),
+                      ReviewField("Role", _role ?? "Not selected"),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
             SizedBox(height: sizes.verticalSpacing),
+            
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -653,9 +807,7 @@ class _AddstaffState extends State<Addstaff> {
                   ),
                 ),
                 ElevatedButton(
-                  onPressed: () {
-                    // Submit form logic
-                  },
+                  onPressed: _submitForm,
                   style: _getButtonStyle(
                     isSmallScreen,
                     isPrimary: true,
@@ -671,11 +823,78 @@ class _AddstaffState extends State<Addstaff> {
     );
   }
 
+
+
+
+  Widget _buildReviewSection(String title, IconData icon, List<ReviewField> fields) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: primaryColor, size: 20),
+            SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 12),
+        ...fields.map((field) => Padding(
+          padding: const EdgeInsets.only(bottom: 8.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 120,
+                child: Text(
+                  "${field.label}:",
+                  style: TextStyle(
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey[700],
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  field.value,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        )).toList(),
+      ],
+    );
+  }
+
+  void _submitForm() {
+    // TODO: Implement form submission logic
+    // This would typically involve sending the data to a backend API
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Staff information submitted successfully')),
+    );
+    
+    // Optionally reset the form or navigate away
+    // Navigator.of(context).pop();
+  }
+
   // Helper widgets
   Widget _buildStepHeading(String title, double headingSize) {
     return Text(
       title,
-      style: TextStyle(fontSize: headingSize, fontWeight: FontWeight.bold),
+      style: TextStyle(
+        fontSize: headingSize, 
+        fontWeight: FontWeight.bold,
+        color: primaryColor,
+      ),
     );
   }
 
@@ -745,106 +964,129 @@ class _AddstaffState extends State<Addstaff> {
     );
   }
 
-  Widget _buildTextField({
+  // Form fields with validation
+  Widget _buildValidatedTextField({
     required TextEditingController controller,
     required String hintText,
     required double hintSize,
+    required String? Function(String?)? validator,
   }) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       decoration: _getInputDecoration(hintText, hintSize),
+      validator: validator,
     );
   }
+Widget _buildValidatedDateField({
+  required TextEditingController controller,
+  required String hintText,
+  required double hintSize,
+  required String? Function(String?)? validator,
+}) {
+  return TextFormField(
+    controller: controller,
+    readOnly: true,
+    decoration: _getInputDecoration(hintText, hintSize),
+    validator: validator,
+    onTap: () async {
+      final DateTime? picked = await showDatePicker(
+        context: context,
+        initialDate: DateTime.now(),
+        firstDate: DateTime(1920),
+        lastDate: DateTime.now(),
+      );
+      if (picked != null) {
+        setState(() {
+          controller.text = DateFormat('dd/MM/yyyy').format(picked);
+        });
+      }
+    },
+  );
+}
 
-  Widget _buildDropdownField({
-    required String hintText,
-    required String? value,
-    required Function(String?) onChanged,
-    required List<String> items,
-    required double hintSize,
-  }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      hint: Text(
-        hintText,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: hintSize,
-          color: Colors.grey,
-        ),
-      ),
-      decoration: _getInputDecoration(hintText, hintSize, isDropdown: true),
-      onChanged: onChanged,
-      items:
-          items.map<DropdownMenuItem<String>>((String value) {
-            return DropdownMenuItem<String>(value: value, child: Text(value));
-          }).toList(),
-      isExpanded: true, // Ensures the dropdown takes full width
-    );
+Widget _buildValidatedDropdownField({
+  required String hintText,
+  required String? value,
+  required Function(String?) onChanged,
+  required List<String> items,
+  required double hintSize,
+  required String? Function(String?)? validator,
+}) {
+  return DropdownButtonFormField<String>(
+    value: value,
+    decoration: _getInputDecoration(hintText, hintSize),
+    items: items.map((String item) {
+      return DropdownMenuItem<String>(
+        value: item,
+        child: Text(item),
+      );
+    }).toList(),
+    onChanged: onChanged,
+    validator: validator,
+  );
+}
+
+InputDecoration _getInputDecoration(String hintText, double hintSize) {
+  return InputDecoration(
+    hintText: hintText,
+    hintStyle: TextStyle(fontSize: hintSize),
+    contentPadding: EdgeInsets.symmetric(
+      horizontal: 12,
+      vertical: 14,
+    ),
+    border: OutlineInputBorder(
+      borderRadius: _borderRadius,
+      borderSide: BorderSide(color: Colors.grey),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderRadius: _borderRadius,
+      borderSide: BorderSide(color: Colors.grey.shade400),
+    ),
+    focusedBorder: OutlineInputBorder(
+      borderRadius: _borderRadius,
+      borderSide: BorderSide(color: primaryColor, width: 2),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderRadius: _borderRadius,
+      borderSide: BorderSide(color: Colors.red),
+    ),
+    filled: true,
+    fillColor: Colors.white,
+  );
+}
+}
+
+
+
+enum ScreenSize {
+  small,
+  medium,
+  large
+}
+
+extension ScreenSizeExtension on ScreenSize {
+  double get titleFontSize {
+    switch (this) {
+      case ScreenSize.small: return 12.0;
+      case ScreenSize.medium: return 14.0;
+      case ScreenSize.large: return 16.0;
+    }
   }
-
-  Widget _buildDateField({
-    required TextEditingController controller,
-    required String hintText,
-    required double hintSize,
-  }) {
-    return TextField(
-      controller: controller,
-      decoration: _getInputDecoration(
-        hintText,
-        hintSize,
-        suffixIcon: const Icon(Icons.calendar_today, size: 20),
-      ),
-      readOnly: true,
-      onTap: () async {
-        DateTime? pickedDate = await showDatePicker(
-          context: context,
-          initialDate: DateTime.now(),
-          firstDate: DateTime(1900),
-          lastDate: DateTime.now(),
-        );
-
-        if (pickedDate != null) {
-          controller.text = DateFormat('MM/dd/yyyy').format(pickedDate);
-        }
-      },
-    );
-  }
-
-  // Common input decoration
-  InputDecoration _getInputDecoration(
-    String hintText,
-    double hintSize, {
-    Widget? suffixIcon,
-    bool isDropdown = false,
-  }) {
-    return InputDecoration(
-      hintText: hintText,
-      hintStyle: TextStyle(
-        fontWeight: FontWeight.w600,
-        fontSize: hintSize,
-        color: Colors.grey,
-      ),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
-        borderSide: BorderSide(color: Colors.grey.shade200),
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
-        borderSide: BorderSide(color: Colors.grey.shade200),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(4),
-        borderSide: BorderSide(color: Colors.grey.shade400),
-      ),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-      suffixIcon: suffixIcon,
-    );
+  
+  double get stepIndicatorSize {
+    switch (this) {
+      case ScreenSize.small: return 28.0;
+      case ScreenSize.medium: return 32.0;
+      case ScreenSize.large: return 36.0;
+    }
   }
 }
 
-// Helper classes for responsive sizing
-enum ScreenSize { small, medium, large }
+ScreenSize getScreenSize(double width) {
+  if (width < 480) return ScreenSize.small;
+  if (width < 768) return ScreenSize.medium;
+  return ScreenSize.large;
+}
 
 class ResponsiveSizes {
   final double headingSize;
@@ -862,44 +1104,23 @@ class ResponsiveSizes {
   });
 }
 
-ScreenSize getScreenSize(double width) {
-  if (width < 600) return ScreenSize.small;
-  if (width < 960) return ScreenSize.medium;
-  return ScreenSize.large;
-}
-
 ResponsiveSizes getResponsiveSizes(double width) {
   final bool isSmallScreen = width < 600;
-
+  
   return ResponsiveSizes(
-    headingSize: isSmallScreen ? 20.0 : 24.0,
-    labelSize: isSmallScreen ? 12.0 : 14.0,
-    hintSize: isSmallScreen ? 10.0 : 12.0,
-    verticalSpacing: isSmallScreen ? 24.0 : 32.0,
+    headingSize: isSmallScreen ? 18.0 : width < 900 ? 20.0 : 24.0,
+    labelSize: isSmallScreen ? 14.0 : 16.0,
+    hintSize: isSmallScreen ? 13.0 : 14.0,
+    verticalSpacing: isSmallScreen ? 20.0 : 24.0,
     isSmallScreen: isSmallScreen,
   );
 }
 
-extension ScreenSizeExtension on ScreenSize {
-  double get titleFontSize {
-    switch (this) {
-      case ScreenSize.small:
-        return 10;
-      case ScreenSize.medium:
-        return 12;
-      case ScreenSize.large:
-        return 14;
-    }
-  }
 
-  double get stepIndicatorSize {
-    switch (this) {
-      case ScreenSize.small:
-        return 24;
-      case ScreenSize.medium:
-        return 28;
-      case ScreenSize.large:
-        return 30;
-    }
-  }
+
+class ReviewField {
+  final String label;
+  final String value;
+  
+  ReviewField(this.label, this.value);
 }
