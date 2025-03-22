@@ -17,11 +17,11 @@ class _AddstaffState extends State<Addstaff> {
   int _currentStep = 0;
 
   late Future<List<Department>> _departmentsFuture;
-  String? _selectedDeptId;
+  int? _selectedDeptId;
   String _iconData = "";
   String _deptName = "";
   String? _role;
-  
+
   // Define form keys for validation
   final _basicInfoFormKey = GlobalKey<FormState>();
   final _officialInfoFormKey = GlobalKey<FormState>();
@@ -29,7 +29,7 @@ class _AddstaffState extends State<Addstaff> {
 
   // Shared form field properties
   final _borderRadius = BorderRadius.circular(4);
-  
+
   final List<String> _roles = [
     'Doctor',
     'Nurse',
@@ -53,7 +53,8 @@ class _AddstaffState extends State<Addstaff> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _licenceNumberController = TextEditingController();
+  final TextEditingController _licenceNumberController =
+      TextEditingController();
   final TextEditingController _idNumberController = TextEditingController();
   final TextEditingController _dateController = TextEditingController();
 
@@ -129,8 +130,9 @@ class _AddstaffState extends State<Addstaff> {
       onChanged: (newValue, selectedItem) {
         if (selectedItem != null) {
           setState(() {
+            _selectedDeptId = selectedItem.departmentId;
             _description = selectedItem.description;
-            _deptName = selectedItem.name;
+            // _deptName = selectedItem.name;
             _iconData = selectedItem.iconData;
           });
         }
@@ -207,22 +209,24 @@ class _AddstaffState extends State<Addstaff> {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    
+
     // Determine container width based on screen size
     double containerWidth = screenSize.width;
     double containerHeight = screenSize.height;
 
     // For very large screens, cap the width
-    containerWidth = screenSize.width > 1000 
-        ? screenSize.width * 0.74 
-        : screenSize.width > 900 
-            ? screenSize.width * 0.75 
+    containerWidth =
+        screenSize.width > 1000
+            ? screenSize.width * 0.74
+            : screenSize.width > 900
+            ? screenSize.width * 0.75
             : screenSize.width * 0.9;
 
     // Set container height based on screen size
-    containerHeight = screenSize.height > 900 
-        ? screenSize.height * 0.75 
-        : screenSize.height * 0.85;
+    containerHeight =
+        screenSize.height > 900
+            ? screenSize.height * 0.75
+            : screenSize.height * 0.85;
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -249,10 +253,11 @@ class _AddstaffState extends State<Addstaff> {
   Widget _buildFormContent(BuildContext context) {
     // Form content width determined by screen size
     final screenWidth = MediaQuery.of(context).size.width;
-    double formWidth = screenWidth > 1400 
-        ? 1000 
-        : screenWidth > 900 
-            ? screenWidth * 0.7 
+    double formWidth =
+        screenWidth > 1400
+            ? 1000
+            : screenWidth > 900
+            ? screenWidth * 0.7
             : screenWidth * 0.9;
 
     return Center(
@@ -300,7 +305,8 @@ class _AddstaffState extends State<Addstaff> {
                           height: stepIndicatorSize,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: isActive ? primaryColor : Colors.grey.shade300,
+                            color:
+                                isActive ? primaryColor : Colors.grey.shade300,
                           ),
                           child: Center(
                             child: Text(
@@ -319,7 +325,10 @@ class _AddstaffState extends State<Addstaff> {
                             _stepTitles[stepIndex],
                             style: TextStyle(
                               fontSize: titleFontSize,
-                              fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                              fontWeight:
+                                  isActive
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
                               color: isActive ? primaryColor : Colors.grey,
                             ),
                             textAlign: TextAlign.center,
@@ -355,7 +364,8 @@ class _AddstaffState extends State<Addstaff> {
                         _stepTitles[index],
                         style: TextStyle(
                           fontSize: titleFontSize,
-                          fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                          fontWeight:
+                              isActive ? FontWeight.bold : FontWeight.normal,
                           color: isActive ? primaryColor : Colors.grey,
                         ),
                         textAlign: TextAlign.center,
@@ -417,7 +427,10 @@ class _AddstaffState extends State<Addstaff> {
                         return null;
                       },
                     ),
-                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    width:
+                        isMobileLayout
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - 16) / 2,
                     labelSize: sizes.labelSize,
                   ),
                   _buildFormField(
@@ -433,7 +446,10 @@ class _AddstaffState extends State<Addstaff> {
                         return null;
                       },
                     ),
-                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    width:
+                        isMobileLayout
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - 16) / 2,
                     labelSize: sizes.labelSize,
                   ),
                   _buildFormField(
@@ -455,7 +471,10 @@ class _AddstaffState extends State<Addstaff> {
                         return null;
                       },
                     ),
-                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    width:
+                        isMobileLayout
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - 16) / 2,
                     labelSize: sizes.labelSize,
                   ),
                   _buildFormField(
@@ -471,7 +490,10 @@ class _AddstaffState extends State<Addstaff> {
                         return null;
                       },
                     ),
-                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    width:
+                        isMobileLayout
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - 16) / 2,
                     labelSize: sizes.labelSize,
                   ),
                 ],
@@ -511,7 +533,10 @@ class _AddstaffState extends State<Addstaff> {
                       hintSize: sizes.hintSize,
                       validator: (value) => null, // Optional field
                     ),
-                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    width:
+                        isMobileLayout
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - 16) / 2,
                     labelSize: sizes.labelSize,
                   ),
                   _buildFormField(
@@ -527,7 +552,10 @@ class _AddstaffState extends State<Addstaff> {
                         return null;
                       },
                     ),
-                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    width:
+                        isMobileLayout
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - 16) / 2,
                     labelSize: sizes.labelSize,
                   ),
                   _buildFormField(
@@ -543,7 +571,10 @@ class _AddstaffState extends State<Addstaff> {
                         return null;
                       },
                     ),
-                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    width:
+                        isMobileLayout
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - 16) / 2,
                     labelSize: sizes.labelSize,
                   ),
                   _buildFormField(
@@ -556,13 +587,18 @@ class _AddstaffState extends State<Addstaff> {
                         if (value == null || value.isEmpty) {
                           return 'Email address is required';
                         }
-                        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                        if (!RegExp(
+                          r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                        ).hasMatch(value)) {
                           return 'Enter a valid email address';
                         }
                         return null;
                       },
                     ),
-                    width: isMobileLayout ? constraints.maxWidth : (constraints.maxWidth - 16) / 2,
+                    width:
+                        isMobileLayout
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - 16) / 2,
                     labelSize: sizes.labelSize,
                   ),
                 ],
@@ -616,10 +652,10 @@ class _AddstaffState extends State<Addstaff> {
                             'Department',
                             _buildDepartmentDropdown(
                               hintText: "Select Department",
-                              value: _selectedDeptId,
+                              value: _deptName,
                               onChanged: (value) {
                                 setState(() {
-                                  _selectedDeptId = value;
+                                  _deptName = value!;
                                 });
                               },
                               items: snapshot.data ?? [],
@@ -660,7 +696,10 @@ class _AddstaffState extends State<Addstaff> {
                         return null;
                       },
                     ),
-                    width: isMobileLayout ? constraints.maxWidth : constraints.maxWidth,
+                    width:
+                        isMobileLayout
+                            ? constraints.maxWidth
+                            : constraints.maxWidth,
                     labelSize: sizes.labelSize,
                   ),
                 ],
@@ -734,7 +773,7 @@ class _AddstaffState extends State<Addstaff> {
           children: [
             _buildStepHeading('Review and Submit', sizes.headingSize),
             SizedBox(height: sizes.verticalSpacing),
-            
+
             // Review Card
             Container(
               width: constraints.maxWidth,
@@ -755,47 +794,52 @@ class _AddstaffState extends State<Addstaff> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Personal Info Section
-                  _buildReviewSection(
-                    "Personal Information",
-                    Icons.person,
-                    [
-                      ReviewField("Name", "${_firstNameController.text} ${_lastNameController.text}"),
-                      ReviewField("Gender", _selectedGender ?? "Not provided"),
-                      ReviewField("Date of Birth", _dateController.text),
-                    ],
-                  ),
+                  _buildReviewSection("Personal Information", Icons.person, [
+                    ReviewField(
+                      "Name",
+                      "${_firstNameController.text} ${_lastNameController.text}",
+                    ),
+                    ReviewField("Gender", _selectedGender ?? "Not provided"),
+                    ReviewField("Date of Birth", _dateController.text),
+                  ]),
 
                   Divider(height: 32, thickness: 1),
 
                   // Official Info Section
-                  _buildReviewSection(
-                    "Official Information",
-                    Icons.badge,
-                    [
-                      ReviewField("ID Number", _idNumberController.text),
-                      ReviewField("License Number", _licenceNumberController.text.isEmpty ? "Not provided" : _licenceNumberController.text),
-                      ReviewField("Phone Number", _phoneController.text),
-                      ReviewField("Email", _emailController.text),
-                    ],
-                  ),
+                  _buildReviewSection("Official Information", Icons.badge, [
+                    ReviewField("ID Number", _idNumberController.text),
+                    ReviewField(
+                      "License Number",
+                      _licenceNumberController.text.isEmpty
+                          ? "Not provided"
+                          : _licenceNumberController.text,
+                    ),
+                    ReviewField("Phone Number", _phoneController.text),
+                    ReviewField("Email", _emailController.text),
+                  ]),
 
                   Divider(height: 32, thickness: 1),
 
                   // Department Info Section
                   _buildReviewSection(
                     "Department Information",
-                    _iconData.isNotEmpty ? getIconData(_iconData.split('.').last) : Icons.local_hospital,
+                    _iconData.isNotEmpty
+                        ? getIconData(_iconData.split('.').last)
+                        : Icons.local_hospital,
                     [
-                      ReviewField("Department", _deptName.isEmpty ? "Not selected" : _deptName),
+                      ReviewField(
+                        "Department",
+                        _deptName.isEmpty ? "Not selected" : _deptName,
+                      ),
                       ReviewField("Role", _role ?? "Not selected"),
                     ],
                   ),
                 ],
               ),
             ),
-            
+
             SizedBox(height: sizes.verticalSpacing),
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -823,10 +867,11 @@ class _AddstaffState extends State<Addstaff> {
     );
   }
 
-
-
-
-  Widget _buildReviewSection(String title, IconData icon, List<ReviewField> fields) {
+  Widget _buildReviewSection(
+    String title,
+    IconData icon,
+    List<ReviewField> fields,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -845,45 +890,131 @@ class _AddstaffState extends State<Addstaff> {
           ],
         ),
         SizedBox(height: 12),
-        ...fields.map((field) => Padding(
-          padding: const EdgeInsets.only(bottom: 8.0),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(
-                width: 120,
-                child: Text(
-                  "${field.label}:",
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey[700],
-                  ),
+        ...fields
+            .map(
+              (field) => Padding(
+                padding: const EdgeInsets.only(bottom: 8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 120,
+                      child: Text(
+                        "${field.label}:",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        field.value,
+                        style: TextStyle(fontWeight: FontWeight.w400),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              Expanded(
-                child: Text(
-                  field.value,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        )).toList(),
+            )
+            .toList(),
       ],
     );
   }
 
-  void _submitForm() {
-    // TODO: Implement form submission logic
-    // This would typically involve sending the data to a backend API
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Staff information submitted successfully')),
+  void _submitForm() async {
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
     );
-    
-    // Optionally reset the form or navigate away
-    // Navigator.of(context).pop();
+
+    try {
+      final Map<String, dynamic> staffData = {
+        "first_name": _firstNameController.text,
+        "last_name": _lastNameController.text,
+        "role": _role,
+        "department_id": _selectedDeptId!,
+        "specialization": _role,
+        "id_number": _idNumberController.text,
+        "licenseNumber": _licenceNumberController.text,
+        "phone": _phoneController.text,
+        "email": _emailController.text,
+        "hire_date": DateTime.now().toIso8601String(),
+      };
+
+      final response = await comms.postRequest(endpoint: "api/staff", data: staffData);
+      
+      // Close loading dialog
+      Navigator.pop(context);
+
+      if (response["success"]) {
+        // Show success dialog
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Success'),
+              content: const Text('Staff member added successfully'),
+              icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
+              actions: [
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop(); // Close dialog
+                    Navigator.of(context).pop(); // Return to previous screen
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      } else {
+        // Show error dialog
+        await showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: const Text('Error'),
+              content: Text(response["message"] ?? 'Failed to add staff member'),
+              icon: const Icon(Icons.error, color: Colors.red, size: 48),
+              actions: [
+                TextButton(
+                  child: const Text('OK'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+      
+      // Show error dialog
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Error'),
+            content: Text('An error occurred: $e'),
+            icon: const Icon(Icons.error, color: Colors.red, size: 48),
+            actions: [
+              TextButton(
+                child: const Text('OK'),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   // Helper widgets
@@ -891,7 +1022,7 @@ class _AddstaffState extends State<Addstaff> {
     return Text(
       title,
       style: TextStyle(
-        fontSize: headingSize, 
+        fontSize: headingSize,
         fontWeight: FontWeight.bold,
         color: primaryColor,
       ),
@@ -977,107 +1108,103 @@ class _AddstaffState extends State<Addstaff> {
       validator: validator,
     );
   }
-Widget _buildValidatedDateField({
-  required TextEditingController controller,
-  required String hintText,
-  required double hintSize,
-  required String? Function(String?)? validator,
-}) {
-  return TextFormField(
-    controller: controller,
-    readOnly: true,
-    decoration: _getInputDecoration(hintText, hintSize),
-    validator: validator,
-    onTap: () async {
-      final DateTime? picked = await showDatePicker(
-        context: context,
-        initialDate: DateTime.now(),
-        firstDate: DateTime(1920),
-        lastDate: DateTime.now(),
-      );
-      if (picked != null) {
-        setState(() {
-          controller.text = DateFormat('dd/MM/yyyy').format(picked);
-        });
-      }
-    },
-  );
+
+  Widget _buildValidatedDateField({
+    required TextEditingController controller,
+    required String hintText,
+    required double hintSize,
+    required String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      readOnly: true,
+      decoration: _getInputDecoration(hintText, hintSize),
+      validator: validator,
+      onTap: () async {
+        final DateTime? picked = await showDatePicker(
+          context: context,
+          initialDate: DateTime.now(),
+          firstDate: DateTime(1920),
+          lastDate: DateTime.now(),
+        );
+        if (picked != null) {
+          setState(() {
+            controller.text = DateFormat('dd/MM/yyyy').format(picked);
+          });
+        }
+      },
+    );
+  }
+
+  Widget _buildValidatedDropdownField({
+    required String hintText,
+    required String? value,
+    required Function(String?) onChanged,
+    required List<String> items,
+    required double hintSize,
+    required String? Function(String?)? validator,
+  }) {
+    return DropdownButtonFormField<String>(
+      value: value,
+      decoration: _getInputDecoration(hintText, hintSize),
+      items:
+          items.map((String item) {
+            return DropdownMenuItem<String>(value: item, child: Text(item));
+          }).toList(),
+      onChanged: onChanged,
+      validator: validator,
+    );
+  }
+
+  InputDecoration _getInputDecoration(String hintText, double hintSize) {
+    return InputDecoration(
+      hintText: hintText,
+      hintStyle: TextStyle(fontSize: hintSize),
+      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+      border: OutlineInputBorder(
+        borderRadius: _borderRadius,
+        borderSide: BorderSide(color: Colors.grey),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: _borderRadius,
+        borderSide: BorderSide(color: Colors.grey.shade400),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: _borderRadius,
+        borderSide: BorderSide(color: primaryColor, width: 2),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: _borderRadius,
+        borderSide: BorderSide(color: Colors.red),
+      ),
+      filled: true,
+      fillColor: Colors.white,
+    );
+  }
 }
 
-Widget _buildValidatedDropdownField({
-  required String hintText,
-  required String? value,
-  required Function(String?) onChanged,
-  required List<String> items,
-  required double hintSize,
-  required String? Function(String?)? validator,
-}) {
-  return DropdownButtonFormField<String>(
-    value: value,
-    decoration: _getInputDecoration(hintText, hintSize),
-    items: items.map((String item) {
-      return DropdownMenuItem<String>(
-        value: item,
-        child: Text(item),
-      );
-    }).toList(),
-    onChanged: onChanged,
-    validator: validator,
-  );
-}
-
-InputDecoration _getInputDecoration(String hintText, double hintSize) {
-  return InputDecoration(
-    hintText: hintText,
-    hintStyle: TextStyle(fontSize: hintSize),
-    contentPadding: EdgeInsets.symmetric(
-      horizontal: 12,
-      vertical: 14,
-    ),
-    border: OutlineInputBorder(
-      borderRadius: _borderRadius,
-      borderSide: BorderSide(color: Colors.grey),
-    ),
-    enabledBorder: OutlineInputBorder(
-      borderRadius: _borderRadius,
-      borderSide: BorderSide(color: Colors.grey.shade400),
-    ),
-    focusedBorder: OutlineInputBorder(
-      borderRadius: _borderRadius,
-      borderSide: BorderSide(color: primaryColor, width: 2),
-    ),
-    errorBorder: OutlineInputBorder(
-      borderRadius: _borderRadius,
-      borderSide: BorderSide(color: Colors.red),
-    ),
-    filled: true,
-    fillColor: Colors.white,
-  );
-}
-}
-
-
-
-enum ScreenSize {
-  small,
-  medium,
-  large
-}
+enum ScreenSize { small, medium, large }
 
 extension ScreenSizeExtension on ScreenSize {
   double get titleFontSize {
     switch (this) {
-      case ScreenSize.small: return 12.0;
-      case ScreenSize.medium: return 14.0;
-      case ScreenSize.large: return 16.0;
+      case ScreenSize.small:
+        return 12.0;
+      case ScreenSize.medium:
+        return 14.0;
+      case ScreenSize.large:
+        return 16.0;
     }
   }
-  
+
   double get stepIndicatorSize {
     switch (this) {
-      case ScreenSize.small: return 28.0;
-      case ScreenSize.medium: return 32.0;
-      case ScreenSize.large: return 36.0;
+      case ScreenSize.small:
+        return 28.0;
+      case ScreenSize.medium:
+        return 32.0;
+      case ScreenSize.large:
+        return 36.0;
     }
   }
 }
@@ -1106,9 +1233,14 @@ class ResponsiveSizes {
 
 ResponsiveSizes getResponsiveSizes(double width) {
   final bool isSmallScreen = width < 600;
-  
+
   return ResponsiveSizes(
-    headingSize: isSmallScreen ? 18.0 : width < 900 ? 20.0 : 24.0,
+    headingSize:
+        isSmallScreen
+            ? 18.0
+            : width < 900
+            ? 20.0
+            : 24.0,
     labelSize: isSmallScreen ? 14.0 : 16.0,
     hintSize: isSmallScreen ? 13.0 : 14.0,
     verticalSpacing: isSmallScreen ? 20.0 : 24.0,
@@ -1116,11 +1248,9 @@ ResponsiveSizes getResponsiveSizes(double width) {
   );
 }
 
-
-
 class ReviewField {
   final String label;
   final String value;
-  
+
   ReviewField(this.label, this.value);
 }
