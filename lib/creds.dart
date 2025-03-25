@@ -1,6 +1,6 @@
 import 'package:frontend/requests/Comms.dart';
 
-final String baseUrl = "http://localhost:3000";
+final String baseUrl = "http://192.168.88.216:3000";
 final String serverUrl = "http://185.141.63.56:7000";
 Comms comms = Comms();
 

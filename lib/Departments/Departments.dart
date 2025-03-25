@@ -1,32 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/Departments/AddDept.dart';
 import 'package:frontend/Globals.dart';
-
-class Department {
-  final String name;
-  final String description;
-  final String id;
-  final String headDoctor;
-  final String location;
-  final String contactNumber;
-  final String established;
-  final int totalStaff;
-  final bool isActive;
-  final String imageAsset;
-
-  Department({
-    required this.name,
-    required this.description,
-    required this.id,
-    required this.headDoctor,
-    required this.location,
-    required this.contactNumber,
-    required this.established,
-    required this.totalStaff,
-    required this.isActive,
-    required this.imageAsset,
-  });
-}
+import 'package:frontend/Model/Departments.dart';
+import 'package:frontend/creds.dart';
+import 'package:frontend/utils/ReqGlobal.dart';
 
 class DepartmentsListPage extends StatefulWidget {
   const DepartmentsListPage({Key? key}) : super(key: key);
@@ -36,104 +13,29 @@ class DepartmentsListPage extends StatefulWidget {
 }
 
 class _DepartmentsListPageState extends State<DepartmentsListPage> {
-  final List<Department> departments = [
-    Department(
-      name: 'Cardiology',
-      description: 'Heart and cardiovascular disease treatment',
-      id: 'DEPT-001',
-      headDoctor: 'Dr. Cody Fisher',
-      location: 'Building A, 3rd Floor',
-      contactNumber: '(603) 555-0123',
-      established: '10/05/2005',
-      totalStaff: 24,
-      isActive: true,
-      imageAsset: 'assets/cardiology.png',
-    ),
-    Department(
-      name: 'Dermatology',
-      description: 'Skin, hair, and nail treatments',
-      id: 'DEPT-002',
-      headDoctor: 'Dr. Brooklyn Simmons',
-      location: 'Building B, 2nd Floor',
-      contactNumber: '(219) 555-0114',
-      established: '15/08/2007',
-      totalStaff: 16,
-      isActive: true,
-      imageAsset: 'assets/dermatology.png',
-    ),
-    Department(
-      name: 'Ophthalmology',
-      description: 'Eye care and vision health',
-      id: 'DEPT-003',
-      headDoctor: 'Dr. Jacob Jones',
-      location: 'Building A, 1st Floor',
-      contactNumber: '(319) 555-0115',
-      established: '23/03/2010',
-      totalStaff: 18,
-      isActive: true,
-      imageAsset: 'assets/ophthalmology.png',
-    ),
-    Department(
-      name: 'Neurology',
-      description: 'Brain, spinal cord, and nervous system disorders',
-      id: 'DEPT-004',
-      headDoctor: 'Dr. Esther Howard',
-      location: 'Building C, 4th Floor',
-      contactNumber: '(229) 555-0109',
-      established: '07/11/2012',
-      totalStaff: 22,
-      isActive: true,
-      imageAsset: 'assets/neurology.png',
-    ),
-    Department(
-      name: 'Pediatrics',
-      description: 'Medical care for infants, children, and adolescents',
-      id: 'DEPT-005',
-      headDoctor: 'Dr. Leslie Alexander',
-      location: 'Building B, 1st Floor',
-      contactNumber: '(603) 555-0156',
-      established: '18/02/2006',
-      totalStaff: 30,
-      isActive: true,
-      imageAsset: 'assets/pediatrics.png',
-    ),
-    Department(
-      name: 'Orthopedics',
-      description: 'Musculoskeletal system conditions and treatments',
-      id: 'DEPT-006',
-      headDoctor: 'Dr. Robert Fox',
-      location: 'Building C, 2nd Floor',
-      contactNumber: '(219) 555-0178',
-      established: '25/09/2008',
-      totalStaff: 20,
-      isActive: false,
-      imageAsset: 'assets/orthopedics.png',
-    ),
-    Department(
-      name: 'Psychiatry',
-      description: 'Mental health diagnosis and treatment',
-      id: 'DEPT-007',
-      headDoctor: 'Dr. Kristin Watson',
-      location: 'Building D, 3rd Floor',
-      contactNumber: '(319) 555-0189',
-      established: '12/04/2011',
-      totalStaff: 15,
-      isActive: true,
-      imageAsset: 'assets/psychiatry.png',
-    ),
-    Department(
-      name: 'Radiology',
-      description: 'Medical imaging and diagnostics',
-      id: 'DEPT-008',
-      headDoctor: 'Dr. Darrell Steward',
-      location: 'Building A, 2nd Floor',
-      contactNumber: '(229) 555-0201',
-      established: '30/06/2007',
-      totalStaff: 25,
-      isActive: true,
-      imageAsset: 'assets/radiology.png',
-    ),
-  ];
+  late Future<List<Department>> departments;
+
+  int departmentCount = 0;
+
+  @override
+  void initState() {
+    departments = fetchGlobal<Department>(
+      getRequests: (endpoint) => comms.getRequests(endpoint: endpoint),
+      fromJson: (json) => Department.fromJson(json),
+      endpoint: "api/departments",
+    );
+    super.initState();
+  }
+
+  void onDeptAddedCallback() {
+    setState(() {
+      departments = fetchGlobal<Department>(
+        getRequests: (endpoint) => comms.getRequests(endpoint: endpoint),
+        fromJson: (json) => Department.fromJson(json),
+        endpoint: "api/departments",
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -182,118 +84,159 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                 ),
                 SizedBox(height: isMobile ? 16 : 24),
 
-                // Header with title and add button
-                isMobile
-                    ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Title and count
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Hospital Departments',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${departments.length} departments available',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        // Add button - full width on mobile
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              // Show add department dialog
-                              showAlerts(context, AddDepartment());
-                            },
-                            icon: const Icon(Icons.add),
-                            label: const Text('Add new department'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF6A9969),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    )
-                    : Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Hospital Departments',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${departments.length} departments available',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[500],
-                              ),
-                            ),
-                          ],
-                        ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            // Show add department dialog
-                               showAlerts(context, AddDepartment());
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add new department'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF6A9969),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                SizedBox(height: isMobile ? 16 : 24),
+                FutureBuilder<List<Department>>(
+                  future: departments,
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    }
 
-                // Search bar
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search departments...',
-                      border: InputBorder.none,
-                      icon: Icon(Icons.search, color: Colors.grey),
-                    ),
-                  ),
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final departmentsList = snapshot.data!;
+
+                    return Expanded(
+                      child: Column(
+                        children: [
+                          // Header with title and add button
+                          isMobile
+                              ? Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Hospital Departments',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${departmentsList.length} departments available',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[500],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton.icon(
+                                      onPressed: () {
+                                        showAlerts(
+                                          context,
+                                          AddDepartment(
+                                            onDeptAddedCallback: (p0) {
+                                              if (p0) {
+                                                onDeptAddedCallback();
+                                              }
+                                            },
+                                          ),
+                                        );
+                                      },
+                                      icon: const Icon(Icons.add),
+                                      label: const Text('Add new department'),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF6A9969,
+                                        ),
+                                        foregroundColor: Colors.white,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              )
+                              : Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'Hospital Departments',
+                                        style: TextStyle(
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${departmentsList.length} departments available',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[500],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  ElevatedButton.icon(
+                                    onPressed: () {
+                                      showAlerts(
+                                        context,
+                                        AddDepartment(
+                                          onDeptAddedCallback: (p0) {
+                                            if (p0) {
+                                              onDeptAddedCallback();
+                                            }
+                                          },
+                                        ),
+                                      );
+                                    },
+                                    icon: const Icon(Icons.add),
+                                    label: const Text('Add new department'),
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF6A9969),
+                                      foregroundColor: Colors.white,
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                          SizedBox(height: isMobile ? 16 : 24),
+
+                          // Search bar
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: TextField(
+                              decoration: InputDecoration(
+                                hintText: 'Search departments...',
+                                border: InputBorder.none,
+                                icon: Icon(Icons.search, color: Colors.grey),
+                              ),
+                            ),
+                          ),
+                          SizedBox(height: isMobile ? 16 : 24),
+
+                          // List/Table view
+                          isMobile
+                              ? _buildMobileList(departments: departmentsList)
+                              : _buildTableList(isTablet, departmentsList),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                SizedBox(height: isMobile ? 16 : 24),
-
-                // For mobile: Card-based layout
-                // For tablet/desktop: Table layout
-                isMobile ? _buildMobileList() : _buildTableList(isTablet),
               ],
             ),
           ),
@@ -304,7 +247,16 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
               ? FloatingActionButton(
                 onPressed: () {
                   // Show add department dialog
-                    showAlerts(context, AddDepartment());
+                  showAlerts(
+                    context,
+                    AddDepartment(
+                      onDeptAddedCallback: (p0) {
+                        if (p0) {
+                          onDeptAddedCallback();
+                        }
+                      },
+                    ),
+                  );
                 },
                 backgroundColor: const Color(0xFF6A9969),
                 child: Icon(Icons.add),
@@ -313,7 +265,7 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
     );
   }
 
-  Widget _buildTableList(bool isTablet) {
+  Widget _buildTableList(bool isTablet, List<Department> departments) {
     return Expanded(
       child: Column(
         children: [
@@ -453,13 +405,13 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                       // ID
                       Expanded(
                         flex: isTablet ? 1 : 1,
-                        child: Text(department.id),
+                        child: Text(department.departmentId.toString()),
                       ),
 
                       // Head Doctor
                       Expanded(
                         flex: isTablet ? 2 : 2,
-                        child: Text(department.headDoctor),
+                        child: Text(department.headOfDept??"null"),
                       ),
 
                       // Location - Hide on tablet for space
@@ -470,7 +422,7 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                       Expanded(
                         flex: isTablet ? 1 : 1,
                         child: Text(
-                          department.totalStaff.toString(),
+                          department.staffCount.toString(),
                           textAlign: TextAlign.center,
                         ),
                       ),
@@ -484,21 +436,12 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color:
-                                department.isActive
-                                    ? Colors.green[50]
-                                    : Colors.red[50],
+                            color: Colors.red[50],
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: Text(
-                            department.isActive ? 'Active' : 'Inactive',
-                            style: TextStyle(
-                              color:
-                                  department.isActive
-                                      ? Colors.green
-                                      : Colors.red,
-                              fontSize: 12,
-                            ),
+                            'Inactive',
+                            style: TextStyle(color: Colors.red, fontSize: 12),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -517,7 +460,7 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
     );
   }
 
-  Widget _buildMobileList() {
+  Widget _buildMobileList({required List<Department> departments}) {
     return Expanded(
       child: ListView.builder(
         itemCount: departments.length,
@@ -611,18 +554,15 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                             ),
                             decoration: BoxDecoration(
                               color:
-                                  department.isActive
-                                      ? Colors.green[50]
-                                      : Colors.red[50],
+                                  // department.isActive
+                                  Colors.green[50],
+                              // : Colors.red[50],
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Text(
-                              department.isActive ? 'Active' : 'Inactive',
+                              'Active',
                               style: TextStyle(
-                                color:
-                                    department.isActive
-                                        ? Colors.green
-                                        : Colors.red,
+                                color: Colors.red,
                                 fontSize: 12,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -651,7 +591,7 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                                 ),
                               ),
                               Text(
-                                department.id,
+                                department.departmentId.toString(),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
                                   fontSize: 14,
@@ -672,7 +612,7 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                                 ),
                               ),
                               Text(
-                                department.totalStaff.toString(),
+                                department.staffCount.toString(),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
                                   fontSize: 14,
@@ -693,7 +633,7 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                                 ),
                               ),
                               Text(
-                                department.established,
+                                department.createdAt.toIso8601String(),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w500,
                                   fontSize: 14,
@@ -712,7 +652,7 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                           Icon(Icons.person, color: Colors.blue[700], size: 16),
                           const SizedBox(width: 8),
                           Text(
-                            department.headDoctor,
+                            department.headOfDept??"not Avaiable",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -795,16 +735,19 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
                       padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color:
-                            department.isActive
-                                ? Colors.green[50]
-                                : Colors.red[50],
+                            // department.isActive
+                            Colors.green[50],
+                        // : Colors.red[50],
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Text(
-                        department.isActive ? 'Active' : 'Inactive',
+                        // department.isActive ? 'Active' :
+                        'Inactive',
                         style: TextStyle(
                           color:
-                              department.isActive ? Colors.green : Colors.red,
+                              // department.isActive ?
+                              Colors.green,
+                          //  : Colors.red,
                           fontSize: 12,
                         ),
                       ),
@@ -837,12 +780,15 @@ class _DepartmentsListPageState extends State<DepartmentsListPage> {
           const SizedBox(height: 16),
 
           // ID
-          _buildDetailItem('Department ID', department.id),
-          _buildDetailItem('Head Doctor', department.headDoctor),
+          _buildDetailItem('Department ID', department.departmentId.toString()),
+          _buildDetailItem('Head Doctor', department.headOfDept??"not Available"),
           _buildDetailItem('Location', department.location),
-          _buildDetailItem('Contact Number', department.contactNumber),
-          _buildDetailItem('Established', department.established),
-          _buildDetailItem('Total Staff', department.totalStaff.toString()),
+          // _buildDetailItem('Contact Number', department.con),
+          _buildDetailItem(
+            'Established',
+            department.createdAt.toIso8601String(),
+          ),
+          _buildDetailItem('Total Staff', department.staffCount.toString()),
 
           const SizedBox(height: 24),
 

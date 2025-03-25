@@ -9,7 +9,8 @@ import 'package:frontend/requests/Comms.dart';
 import 'package:frontend/utils/ReqGlobal.dart';
 
 class AddDepartment extends StatefulWidget {
-  const AddDepartment({Key? key}) : super(key: key);
+  final Function(bool) onDeptAddedCallback;
+  const AddDepartment({required this.onDeptAddedCallback});
 
   @override
   State<AddDepartment> createState() => _AddDepartmentState();
@@ -32,7 +33,7 @@ class _AddDepartmentState extends State<AddDepartment> {
   String? _selectedHeadOfDept;
   String _description = "";
   String _iconData = "";
-  int _selectedHeadId = 0;
+  int?_selectedHeadId;
 
   // Data caching
   List<DepartmentOnline>? _cachedDepartments;
@@ -52,17 +53,16 @@ class _AddDepartmentState extends State<AddDepartment> {
   void initState() {
     super.initState();
     // network call to fetch departments
-    _departmentsFuture = fetchDepartmentsOnline(cachedDepartments: _cachedDepartments);
+    _departmentsFuture = fetchDepartmentsOnline(
+      cachedDepartments: _cachedDepartments,
+    );
     // network call to fetch staff
     _staffFuture = fetchGlobal<StaffModel>(
-     
       getRequests: (endpoint) => comms.getRequests(endpoint: endpoint),
       fromJson: (json) => StaffModel.fromJson(json),
-      endpoint: "api/staff"
+      endpoint: "api/staff",
     );
- 
   }
-
 
   Future<void> _submitForm() async {
     // Reset states
@@ -85,9 +85,8 @@ class _AddDepartmentState extends State<AddDepartment> {
     if (_selectedDeptType == null ||
         _description.isEmpty ||
         _locationController.text.trim().isEmpty ||
-        _selectedHeadOfDept == null ||
-        _iconData.isEmpty ||
-        _selectedHeadId == 0) {
+        // _selectedHeadOfDept == null ||
+        _iconData.isEmpty ) {
       setState(() {
         _isLoading = false;
         _errorMessage = "All fields are required. Please complete the form.";
@@ -109,11 +108,18 @@ class _AddDepartmentState extends State<AddDepartment> {
         endpoint: "api/departments",
         data: requestData,
       );
+      print("#########################$response");
 
       if (response["success"]) {
+        widget.onDeptAddedCallback(true);
+        await  Future.delayed(Duration(milliseconds: 600)).then((p0) {
+          Navigator.pop(context);
+        });
+
         _handleSuccessfulSubmission();
+      
       } else {
-        _handleFailedSubmission(response["message"]);
+        _handleFailedSubmission(response["rsp"]);
       }
     } catch (e) {
       _handleError(e);
@@ -126,6 +132,11 @@ class _AddDepartmentState extends State<AddDepartment> {
       _isLoading = false;
       _resetForm();
     });
+
+    showSuccessSnackBar(context, "Department created", "Department has been created successfully");
+
+    // Show success snackbar
+    
   }
 
   void _handleFailedSubmission(String? message) {
@@ -326,12 +337,12 @@ class _AddDepartmentState extends State<AddDepartment> {
                         },
                         items: snapshot.data ?? [],
                         hintSize: hintSize,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please select a department';
-                          }
-                          return null;
-                        },
+                        // validator: (value) {
+                        //   if (value == null || value.isEmpty) {
+                        //     return 'Please select a department';
+                        //   }
+                        //   return null;
+                        // },
                       ),
                       width: constraints.maxWidth,
                       labelSize: labelSize,
@@ -458,42 +469,41 @@ class _AddDepartmentState extends State<AddDepartment> {
             ),
 
             SizedBox(height: verticalSpacing),
-
-            // Submit button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _submitForm,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue[700],
-                  foregroundColor: Colors.white,
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  shadowColor: Colors.blue.withOpacity(0.5),
-                ),
-                child:
-                    _isLoading
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.local_hospital, size: 20),
-                            SizedBox(width: 8),
-                            Text(
-                              'Create Department',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
+            _isLoading
+                ? processingWidget("Creating Department")
+                :
+         
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _submitForm,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue[700],
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      shadowColor: Colors.blue.withOpacity(0.5),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.local_hospital, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Create Department',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 0.5,
+                          ),
                         ),
-              ),
-            ),
+                      ],
+                    ),
+                  ),
+                ),
           ],
         );
       },

@@ -127,7 +127,7 @@ class Comms {
       print(response.data);
 
       // Handle different status codes
-      if (response.statusCode == 200) {
+      if (response.statusCode == 201) {
         return {
           "success": true,
           "rsp": response.data,

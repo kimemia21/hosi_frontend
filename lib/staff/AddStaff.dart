@@ -7,7 +7,8 @@ import 'package:frontend/utils/ReqGlobal.dart';
 import 'package:intl/intl.dart';
 
 class Addstaff extends StatefulWidget {
-  const Addstaff({Key? key}) : super(key: key);
+  final Function(bool) callback;
+  const Addstaff({required this.callback, Key? key}) : super(key: key);
 
   @override
   State<Addstaff> createState() => _AddstaffState();
@@ -86,7 +87,10 @@ class _AddstaffState extends State<Addstaff> {
 
   void _nextStep() {
     // Validate current step before proceeding
-    if (_validateCurrentStep()) {
+    if (true
+      // _validateCurrentStep()
+      ) {
+
       if (_currentStep < _stepTitles.length - 1) {
         setState(() {
           _currentStep += 1;
@@ -95,18 +99,18 @@ class _AddstaffState extends State<Addstaff> {
     }
   }
 
-  bool _validateCurrentStep() {
-    switch (_currentStep) {
-      case 0:
-        return _basicInfoFormKey.currentState?.validate() ?? false;
-      case 1:
-        return _officialInfoFormKey.currentState?.validate() ?? false;
-      case 2:
-        return _departmentInfoFormKey.currentState?.validate() ?? false;
-      default:
-        return true;
-    }
-  }
+  // bool _validateCurrentStep() {
+  //   switch (_currentStep) {
+  //     case 0:
+  //       return _basicInfoFormKey.currentState?.validate() ?? false;
+  //     case 1:
+  //       return _officialInfoFormKey.currentState?.validate() ?? false;
+  //     case 2:
+  //       return _departmentInfoFormKey.currentState?.validate() ?? false;
+  //     default:
+  //       return true;
+  //   }
+  // }
 
   void _previousStep() {
     if (_currentStep > 0) {
@@ -924,44 +928,72 @@ class _AddstaffState extends State<Addstaff> {
 
   void _submitForm() async {
     // Show loading dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
+    // showDialog(
+    //   context: context,
+    //   barrierDismissible: false,
+    //   builder: (BuildContext context) {
+    //     return const Center(child: CircularProgressIndicator());
+    //   },
+    // );
 
     try {
       final Map<String, dynamic> staffData = {
-        "first_name": _firstNameController.text,
-        "last_name": _lastNameController.text,
-        "role": _role,
-        "department_id": _selectedDeptId!,
-        "specialization": _role,
-        "id_number": _idNumberController.text,
-        "licenseNumber": _licenceNumberController.text,
-        "phone": _phoneController.text,
-        "email": _emailController.text,
-        "hire_date": DateTime.now().toIso8601String(),
+      "first_name": "John",
+      "last_name": "Doe", 
+      "role": "Doctor",
+      "department_id": 2,
+      "specialization": "Cardiologist",
+      "id_number": "123456",
+      "licenseNumber": "LIC789",
+      "phone": "+254712345678",
+      "email": "john.doe@example.com",
+      "hire_date": DateTime.now().toIso8601String(),
+      "gender": "Male",
       };
 
-      final response = await comms.postRequest(endpoint: "api/staff", data: staffData);
+      // final Map<String, dynamic> staffData = {
+      //   "first_name": _firstNameController.text,
+      //   "last_name": _lastNameController.text,
+      //   "role": _role,
+      //   "department_id": _selectedDeptId!,
+      //   "specialization": _role,
+      //   "id_number": _idNumberController.text,
+      //   "licenseNumber": _licenceNumberController.text,
+      //   "phone": _phoneController.text,
+      //   "email": _emailController.text,
+      //   "hire_date": DateTime.now().toIso8601String(),
+      //   "gender": _selectedGender,
+      // };
+
       
+
+      final response = await comms.postRequest(
+        endpoint: "api/staff",
+        data: staffData,
+      );
+
+      widget.callback(true);
+
       // Close loading dialog
       Navigator.pop(context);
 
+      print(response);
+
       if (response["success"]) {
-        // Show success dialog
+
+        widget.callback(true);
+
         await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('Success'),
               content: const Text('Staff member added successfully'),
-              icon: const Icon(Icons.check_circle, color: Colors.green, size: 48),
+              icon: const Icon(
+                Icons.check_circle,
+                color: Colors.green,
+                size: 48,
+              ),
               actions: [
                 TextButton(
                   child: const Text('OK'),
@@ -975,13 +1007,17 @@ class _AddstaffState extends State<Addstaff> {
           },
         );
       } else {
+
+           widget.callback(true);
         // Show error dialog
         await showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
               title: const Text('Error'),
-              content: Text(response["message"] ?? 'Failed to add staff member'),
+              content: Text(
+                response["message"] ?? 'Failed to add staff member',
+              ),
               icon: const Icon(Icons.error, color: Colors.red, size: 48),
               actions: [
                 TextButton(
@@ -996,7 +1032,7 @@ class _AddstaffState extends State<Addstaff> {
     } catch (e) {
       // Close loading dialog
       Navigator.pop(context);
-      
+
       // Show error dialog
       await showDialog(
         context: context,
