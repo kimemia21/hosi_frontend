@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:frontend/Authentication/LoginPage.dart';
+import 'package:frontend/Globals.dart';
+import 'package:frontend/creds.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -11,432 +14,654 @@ class SignUpPage extends StatefulWidget {
 
 class _SignUpPageState extends State<SignUpPage> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  
-  bool _isPasswordVisible = false;
-  bool _isConfirmPasswordVisible = false;
-  bool _termsAccepted = false;
 
-  // Modern input decoration method (similar to login page)
-  InputDecoration _modernInputDecoration({
-    required String labelText, 
-    IconData? prefixIcon, 
-    IconData? suffixIcon,
-    VoidCallback? onSuffixIconPressed
-  }) {
-    return InputDecoration(
-      labelText: labelText,
-      labelStyle: GoogleFonts.poppins(
-        color: Colors.grey.shade600,
-        fontSize: 14,
-      ),
-      prefixIcon: prefixIcon != null 
-        ? Icon(prefixIcon, color: Colors.blue.shade300) 
-        : null,
-      suffixIcon: suffixIcon != null
-        ? IconButton(
-            icon: Icon(suffixIcon, color: Colors.blue.shade300),
-            onPressed: onSuffixIconPressed,
-          )
-        : null,
-      filled: true,
-      fillColor: Colors.grey.shade100,
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(
-          color: Colors.grey.shade300,
-          width: 1.5,
-        ),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(
-          color: Colors.blue.shade300,
-          width: 2,
-        ),
-      ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(
-          color: Colors.red.shade300,
-          width: 1.5,
-        ),
-      ),
-      focusedErrorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(
-          color: Colors.red.shade300,
-          width: 2,
-        ),
-      ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 20, 
-        vertical: 16
-      ),
-    );
+  String? _errorMessage;
+
+  bool isLoading = false;
+  // Centralized text controllers
+  final Map<String, TextEditingController> _controllers = {
+    'username': TextEditingController(),
+    'staffId': TextEditingController(),
+    'password': TextEditingController(),
+    'confirmPassword': TextEditingController(),
+  };
+
+  // Visibility states for password fields
+  final Map<String, bool> _passwordVisibility = {
+    'password': false,
+    'confirmPassword': false,
+  };
+
+  void _togglePasswordVisibility(String field) {
+    setState(() {
+      _passwordVisibility[field] = !_passwordVisibility[field]!;
+    });
   }
 
-  void _signUp() {
+  void _signUp() async {
     if (_formKey.currentState?.validate() ?? false) {
-      if (_passwordController.text != _confirmPasswordController.text) {
-        // Show error that passwords don't match
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Passwords do not match',
-              style: GoogleFonts.poppins(),
-            ),
-            backgroundColor: Colors.red.shade400,
-          ),
-        );
-        return;
+      setState(() {
+        isLoading = true;
+      });
+
+      // Create a map of the form data from controllers
+      Map<String, dynamic> formData = {
+        'username': _controllers['username']!.text,
+        'staffId': int.parse(_controllers['staffId']!.text),
+        'password': _controllers['password']!.text,
+      };
+
+      final response = await comms.postRequest(
+        data: formData,
+        endpoint: "api/auth/register",
+      );
+      if (response["success"]) {
+        setState(() {
+          isLoading = false;
+          _errorMessage = null;
+        });
+        showSuccessSnackBar(context, "Account Creation", response["rsp"]);
+
+        print("successfully added");
+      } else {
+        print(response["rsp"]);
+        setState(() {
+          isLoading = false;
+          _errorMessage = response["rsp"];
+        });
       }
 
-      if (!_termsAccepted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Please accept the Terms and Conditions',
-              style: GoogleFonts.poppins(),
-            ),
-            backgroundColor: Colors.red.shade400,
-          ),
-        );
-        return;
-      }
+      print(formData); // For testing
 
-      // Implement signup logic here
-      print('Signup successful');
     }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: HospitalColorPalette.background,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          bool isWideScreen = constraints.maxWidth > 1000;
-          bool isMediumScreen = constraints.maxWidth > 600 && constraints.maxWidth <= 1000;
+          // Define responsive breakpoints
+          bool isWideScreen = constraints.maxWidth > 1200;
+          bool isMediumScreen =
+              constraints.maxWidth > 800 && constraints.maxWidth <= 1200;
+          bool isTabletScreen =
+              constraints.maxWidth > 600 && constraints.maxWidth <= 800;
           bool isSmallScreen = constraints.maxWidth <= 600;
 
-          return Container(
-            color: const Color(0xFFF0F4FF),
-            child: Center(
-              child: SingleChildScrollView(
-                child: Container(
-                  width: isWideScreen ? 1000 : 
-                          isMediumScreen ? 800 : 
-                          constraints.maxWidth * 0.95,
-                  height: isWideScreen ? 700 : 
-                           isMediumScreen ? 600 : 
-                           constraints.maxHeight * 0.95,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.2),
-                        spreadRadius: 5,
-                        blurRadius: 15,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
+          return Center(
+            child: SingleChildScrollView(
+              child: Container(
+                width: _calculateContainerWidth(
+                  constraints,
+                  isWideScreen,
+                  isMediumScreen,
+                  isTabletScreen,
+                  isSmallScreen,
+                ),
+                constraints: BoxConstraints(
+                  maxHeight: _calculateContainerHeight(
+                    constraints,
+                    isWideScreen,
+                    isMediumScreen,
+                    isTabletScreen,
+                    isSmallScreen,
                   ),
-                  child: isWideScreen 
-                    ? _buildWideScreenLayout() 
-                    : _buildNarrowScreenLayout(),
-                ).animate()
-                  .fadeIn(duration: 600.ms)
-                  .shimmer(delay: 400.ms, duration: 1000.ms),
+                ),
+                decoration: _buildContainerDecoration(),
+                child:
+                    isWideScreen
+                        ? _buildWideScreenLayout()
+                        : isMediumScreen
+                        ? _buildMediumScreenLayout()
+                        : isTabletScreen
+                        ? _buildTabletLayout()
+                        : _buildMobileLayout(),
               ),
             ),
-          );
+          ).animate().fadeIn(duration: 600.ms);
         },
       ),
+    );
+  }
+
+  double _calculateContainerWidth(
+    BoxConstraints constraints,
+    bool isWideScreen,
+    bool isMediumScreen,
+    bool isTabletScreen,
+    bool isSmallScreen,
+  ) {
+    if (isWideScreen) return 900;
+    if (isMediumScreen) return constraints.maxWidth * 0.9;
+    if (isTabletScreen) return constraints.maxWidth * 0.95;
+    return constraints.maxWidth;
+  }
+
+  double _calculateContainerHeight(
+    BoxConstraints constraints,
+    bool isWideScreen,
+    bool isMediumScreen,
+    bool isTabletScreen,
+    bool isSmallScreen,
+  ) {
+    if (isWideScreen) return constraints.maxHeight * 0.85;
+    if (isMediumScreen) return constraints.maxHeight * 0.9;
+    if (isTabletScreen) return constraints.maxHeight * 0.95;
+    return double.infinity;
+  }
+
+  BoxDecoration _buildContainerDecoration() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(25),
+      boxShadow: [
+        BoxShadow(
+          color: HospitalColorPalette.primary.withOpacity(0.1),
+          blurRadius: 15,
+          spreadRadius: 5,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMobileLayout() {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildLogo(isMobile: true),
+          const SizedBox(height: 20),
+          _buildSignUpForm(isMobile: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTabletLayout() {
+    return Container(
+      width: MediaQuery.of(context).size.width * 0.55,
+      padding: const EdgeInsets.all(30.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildLogo(isTablet: true),
+          const SizedBox(height: 30),
+          _buildSignUpForm(isTablet: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMediumScreenLayout() {
+    return Row(
+      children: [
+        // Left Side: Hospital Information
+        Expanded(
+          flex: 6,
+          child: Container(
+            padding: const EdgeInsets.all(40),
+            decoration: BoxDecoration(
+              color: HospitalColorPalette.primary,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                bottomLeft: Radius.circular(25),
+              ),
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "HOSI Health System",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 30),
+                Image.asset(
+                  'images/logo.png',
+                  height: 100,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 30),
+                _buildHospitalDescription(),
+              ],
+            ),
+          ),
+        ),
+
+        // Right Side: SignUp Form
+        Expanded(flex: 6, child: _buildSignUpForm()),
+      ],
     );
   }
 
   Widget _buildWideScreenLayout() {
     return Row(
       children: [
-        // Left Side - Welcome Section
+        // Left Side: Hospital Information
         Expanded(
-          flex: 1,
+          flex: 6,
           child: Container(
-            decoration: const BoxDecoration(
-              color: Color(0xFFE6F1FF),
-              borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(20),
-                bottomLeft: Radius.circular(20),
+            padding: const EdgeInsets.all(40),
+            decoration: BoxDecoration(
+              color: HospitalColorPalette.primary,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(25),
+                bottomLeft: Radius.circular(25),
               ),
             ),
-            child: Padding(
-              padding: const EdgeInsets.all(30.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'CREATE ACCOUNT',
-                    style: GoogleFonts.poppins(
-                      fontSize: 36,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black,
-                    ),
-                  ).animate().slideX(begin: -0.5, end: 0),
-                  const SizedBox(height: 10),
-                  Text(
-                    'Join our community and start your journey',
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                  ).animate().slideX(begin: -0.5, end: 0, delay: 200.ms),
-                  const SizedBox(height: 30),
-                  Center(
-                    child: Image.asset(
-                      'images/signup.png',
-                      height: 250,
-                      fit: BoxFit.contain,
-                    ).animate()
-                      .scale(begin: Offset(0.5, 0.5))
-                      .shake(delay: 500.ms),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  "HOSI Health System",
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: 1.2,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 30),
+                Image.asset(
+                  'images/logo.png',
+                  height: 100,
+                  fit: BoxFit.contain,
+                ),
+                const SizedBox(height: 30),
+                _buildHospitalDescription(),
+              ],
             ),
           ),
         ),
-        
-        // Right Side - Signup Form
-        Expanded(
-          flex: 1,
-          child: _buildSignupForm(),
+
+        // Right Side: SignUp Form
+        Expanded(flex: 6, child: _buildSignUpForm()),
+      ],
+    );
+  }
+
+  Widget _buildLogo({
+    bool isTablet = false,
+    bool isMedium = false,
+    bool isMobile = false,
+  }) {
+    double logoHeight =
+        isTablet
+            ? 150
+            : isMedium
+            ? 140
+            : isMobile
+            ? 120
+            : 160;
+
+    return Column(
+      children: [
+        Image.asset('images/logo.png', height: logoHeight, fit: BoxFit.contain),
+        const SizedBox(height: 20),
+        Text(
+          "HOSI Health System",
+          style: GoogleFonts.poppins(
+            fontSize:
+                isTablet
+                    ? 24
+                    : isMedium
+                    ? 22
+                    : isMobile
+                    ? 20
+                    : 26,
+            fontWeight: FontWeight.w700,
+            color: HospitalColorPalette.primary,
+            letterSpacing: 1.1,
+          ),
+          textAlign: TextAlign.center,
         ),
       ],
     );
   }
 
-  Widget _buildNarrowScreenLayout() {
-    return SingleChildScrollView(
-      child: Column(
+  Widget _buildHospitalDescription() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "Our Hospital Management System",
+          style: GoogleFonts.poppins(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white70,
+          ),
+        ),
+        const SizedBox(height: 15),
+        _buildDescriptionItem(
+          "Holistic Care",
+          "Comprehensive healthcare solutions for modern medical environments.",
+        ),
+        _buildDescriptionItem(
+          "Efficient Management",
+          "Streamline operations, reduce administrative overhead, and improve patient care.",
+        ),
+        _buildDescriptionItem(
+          "Secure Access",
+          "Advanced security protocols to protect sensitive medical information.",
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDescriptionItem(String title, String description) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            color: const Color(0xFFE6F1FF),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+          Icon(
+            Icons.medical_services_outlined,
+            color: HospitalColorPalette.accent,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'CREATE ACCOUNT',
+                  title,
                   style: GoogleFonts.poppins(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
                   ),
-                ).animate().slideY(begin: -0.5, end: 0),
-                const SizedBox(height: 10),
+                ),
+                const SizedBox(height: 4),
                 Text(
-                  'Join our community and start your journey',
-                  textAlign: TextAlign.center,
+                  description,
                   style: GoogleFonts.poppins(
                     fontSize: 14,
-                    color: Colors.grey,
+                    color: Colors.white70,
                   ),
-                ).animate().slideY(begin: -0.5, end: 0, delay: 200.ms),
+                ),
               ],
             ),
           ),
-          _buildSignupForm(),
         ],
       ),
     );
   }
 
-  Widget _buildSignupForm() {
-    return Padding(
-      padding: const EdgeInsets.all(30.0),
+  Widget _buildSignUpForm({bool isTablet = false, bool isMobile = false}) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal:
+            isTablet
+                ? 20
+                : isMobile
+                ? 10
+                : 30,
+        vertical:
+            isTablet
+                ? 15
+                : isMobile
+                ? 10
+                : 20,
+      ),
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Full Name Input
-            TextFormField(
-              controller: _nameController,
-              decoration: _modernInputDecoration(
-                labelText: 'Full Name',
-                prefixIcon: Icons.person_outline,
+            _errorMessage != null
+                ? Container(child: errorWidget(errorMessage: _errorMessage!))
+                : Container(),
+            Text(
+              "Create an Account",
+              style: GoogleFonts.poppins(
+                fontSize:
+                    isTablet
+                        ? 14
+                        : isMobile
+                        ? 12
+                        : 16,
+                fontWeight: FontWeight.w400,
+                color: HospitalColorPalette.textSecondary,
               ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              "Sign up to access your hospital dashboard",
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize:
+                    isTablet
+                        ? 12
+                        : isMobile
+                        ? 10
+                        : 12,
+                fontWeight: FontWeight.w400,
+                color: HospitalColorPalette.textSecondary,
+              ),
+            ),
+            const SizedBox(height: 30),
+            _buildTextField(
+              label: 'username',
+              icon: Icons.person_outlined,
+              controller: _controllers['username']!,
+            ),
+            const SizedBox(height: 20),
+            _buildTextField(
+              label: 'Staff id',
+              icon: Icons.edit_document,
+              controller: _controllers['staffId']!,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your full name';
+                  return 'Please enter your staff id';
                 }
                 return null;
               },
-            ).animate().slideX(begin: 0.5, end: 0),
-            
+            ),
             const SizedBox(height: 20),
-            
-            // Email Input
-            TextFormField(
-              controller: _emailController,
-              decoration: _modernInputDecoration(
-                labelText: 'Email Address',
-                prefixIcon: Icons.email_outlined,
-              ),
+            _buildTextField(
+              label: 'password',
+              icon: Icons.lock_outline,
+              controller: _controllers['password']!,
+              isPassword: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your email';
+                  return 'Please enter your password';
                 }
-                // Basic email validation
-                final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
-                if (!emailRegex.hasMatch(value)) {
-                  return 'Please enter a valid email address';
+                if (value.length < 6) {
+                  return 'Password must be at least 6 characters';
                 }
                 return null;
               },
-            ).animate().slideX(begin: 0.5, end: 0, delay: 100.ms),
-            
+            ),
             const SizedBox(height: 20),
-            
-            // Password Input
-            TextFormField(
-              controller: _passwordController,
-              obscureText: !_isPasswordVisible,
-              decoration: _modernInputDecoration(
-                labelText: 'Password',
-                prefixIcon: Icons.lock_outline,
-                suffixIcon: _isPasswordVisible 
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-                onSuffixIconPressed: () {
-                  setState(() {
-                    _isPasswordVisible = !_isPasswordVisible;
-                  });
-                }
-              ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Please enter a password';
-                }
-                if (value.length < 8) {
-                  return 'Password must be at least 8 characters long';
-                }
-                return null;
-              },
-            ).animate().slideX(begin: 0.5, end: 0, delay: 200.ms),
-            
-            const SizedBox(height: 20),
-            
-            // Confirm Password Input
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: !_isConfirmPasswordVisible,
-              decoration: _modernInputDecoration(
-                labelText: 'Confirm Password',
-                prefixIcon: Icons.lock_outline,
-                suffixIcon: _isConfirmPasswordVisible 
-                  ? Icons.visibility_outlined
-                  : Icons.visibility_off_outlined,
-                onSuffixIconPressed: () {
-                  setState(() {
-                    _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
-                  });
-                }
-              ),
+            _buildTextField(
+              label: 'confirmPassword',
+              icon: Icons.lock_outline,
+              controller: _controllers['confirmPassword']!,
+              isPassword: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
                   return 'Please confirm your password';
                 }
+                if (value != _controllers["password"]!.text) {
+                  return 'Passwords do not match';
+                }
                 return null;
               },
-            ).animate().slideX(begin: 0.5, end: 0, delay: 300.ms),
-            
-            const SizedBox(height: 20),
-            
-            // Terms and Conditions Checkbox
-            Row(
-              children: [
-                Checkbox(
-                  value: _termsAccepted,
-                  onChanged: (bool? value) {
-                    setState(() {
-                      _termsAccepted = value ?? false;
-                    });
-                  },
-                  activeColor: Colors.blue.shade400,
-                ),
-                Expanded(
-                  child: Text(
-                    'I agree to the Terms and Conditions',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                ),
-              ],
-            ).animate().fadeIn(delay: 400.ms),
-            
+            ),
             const SizedBox(height: 30),
-            
-            // Signup Button
-            ElevatedButton(
-              onPressed: _signUp,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue.shade400,
-                minimumSize: const Size(double.infinity, 55),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                elevation: 5,
-                shadowColor: Colors.blue.shade200,
-              ),
-              child: Text(
-                'Sign Up',
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ).animate()
-              .scale(begin: const Offset(0.5, 0.5))
-              .shake(delay: 400.ms),
-            
+            isLoading
+                ? processingWidget(
+                  "Creating Account",
+                  14,
+                  HospitalColorPalette.primary,
+                )
+                : _buildSignUpButton(isTablet: isTablet, isMobile: isMobile),
+
             const SizedBox(height: 20),
-            
-            // Login Link
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Already have an account? ',
-                  style: GoogleFonts.poppins(
-                    color: Colors.grey.shade700,
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    // Navigate to login page
-                    Navigator.of(context).pop();
-                  },
-                  child: Text(
-                    'Log In',
-                    style: GoogleFonts.poppins(
-                      color: Colors.blue.shade400,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ).animate().fadeIn(delay: 600.ms),
+            _buildLoginRow(isTablet: isTablet, isMobile: isMobile),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required IconData icon,
+    required TextEditingController controller,
+    bool isPassword = false,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      obscureText: isPassword ? !_passwordVisibility[label]! : false,
+      style: GoogleFonts.poppins(),
+      decoration: _inputDecoration(
+        label,
+        icon,
+        suffixIcon:
+            isPassword
+                ? IconButton(
+                  icon: Icon(
+                    _passwordVisibility[label]!
+                        ? Icons.visibility
+                        : Icons.visibility_off,
+                    color: HospitalColorPalette.textSecondary,
+                  ),
+                  onPressed: () => _togglePasswordVisibility(label),
+                )
+                : null,
+      ),
+      validator: validator ?? _defaultValidator,
+    );
+  }
+
+  String? _defaultValidator(String? value) {
+    if (value == null || value.isEmpty) {
+      return 'Please enter $value';
+    }
+    return null;
+  }
+
+  Widget _buildSignUpButton({bool isTablet = false, bool isMobile = false}) {
+    return ElevatedButton(
+      onPressed: _signUp,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: HospitalColorPalette.primary,
+        minimumSize: Size(
+          double.infinity,
+          isTablet
+              ? 40
+              : isMobile
+              ? 35
+              : 50,
+        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        elevation: 3,
+      ),
+      child: Text(
+        "Sign Up",
+        style: GoogleFonts.poppins(
+          fontSize:
+              isTablet
+                  ? 14
+                  : isMobile
+                  ? 12
+                  : 16,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoginRow({bool isTablet = false, bool isMobile = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text(
+          "Already have an account? ",
+          style: GoogleFonts.poppins(
+            color: HospitalColorPalette.textSecondary,
+            fontSize:
+                isTablet
+                    ? 12
+                    : isMobile
+                    ? 10
+                    : 14,
+          ),
+        ),
+        TextButton(
+          onPressed: () {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => LoginPage()),
+            );
+          },
+          child: Text(
+            "Login",
+            style: GoogleFonts.poppins(
+              fontSize:
+                  isTablet
+                      ? 12
+                      : isMobile
+                      ? 10
+                      : 14,
+              fontWeight: FontWeight.w600,
+              color: HospitalColorPalette.primary,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  InputDecoration _inputDecoration(
+    String label,
+    IconData icon, {
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: GoogleFonts.poppins(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: HospitalColorPalette.textSecondary,
+      ),
+      prefixIcon: Icon(icon, color: HospitalColorPalette.primary),
+      suffixIcon: suffixIcon,
+      filled: true,
+      fillColor: HospitalColorPalette.background,
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(
+          color: HospitalColorPalette.primaryLight.withOpacity(0.3),
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: HospitalColorPalette.primary, width: 1.5),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: BorderSide(color: HospitalColorPalette.error),
       ),
     );
   }

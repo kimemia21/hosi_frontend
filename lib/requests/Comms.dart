@@ -127,26 +127,46 @@ class Comms {
       print(response.data);
 
       // Handle different status codes
+      // create
       if (response.statusCode == 201) {
         return {
           "success": true,
           "rsp": response.data,
         };
-      } else if (response.statusCode == 400) {
+      }
+      //  login
+      else if (response.statusCode == 200) {
+        return {
+          "success": true,
+          "rsp": response.data,
+        };
+      }
+       else if (response.statusCode == 400) {
         // Handle bad request errors
         return {
           "success": false,
           "rsp": response.data['message'] ?? 'Bad request error',
           "statusCode": 400
         };
-      } else if (response.statusCode == 401) {
+      } 
+      else if (response.statusCode == 401) {
         // Handle unauthorized errors
+        if (response.data['message'] != null && 
+        response.data['message']['text'] == 'Account is locked') {
+          return {
+        "success": false,
+        "rsp": response.data['message']['text'],
+        "nextAttempt": response.data['message']['nextAttempt'],
+        "statusCode": 401
+          };
+        }
         return {
           "success": false,
-          "rsp": "Unauthorized access",
+          "rsp": response.data['message'] ?? 'Unauthorized access',
           "statusCode": 401
         };
-      } else {
+      }
+      else {
         // Handle other errors
         return {
           "success": false,

@@ -86,7 +86,7 @@ IconData getIconData(String iconName) {
 
 processingWidget(
   String txt, [
-  double fontsize = 20,
+  double fontsize = 14,
   Color fontcolor = Colors.green,
 ]) => Row(
   mainAxisAlignment: MainAxisAlignment.center,
@@ -97,7 +97,7 @@ processingWidget(
       style: TextStyle(
         color: fontcolor,
         fontSize: fontsize,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
       ),
     ),
     SpinKitPulse(color: fontcolor),
@@ -139,7 +139,7 @@ void showSuccessSnackBar(BuildContext context, String title, String message) {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                  message,
+                    message,
                     style: TextStyle(color: Colors.green[600], fontSize: 12),
                   ),
                 ],
@@ -156,19 +156,39 @@ void showSuccessSnackBar(BuildContext context, String title, String message) {
   );
 }
 
+Widget errorWidget({required String errorMessage}) {
+  return Container(
+    padding: EdgeInsets.all(12),
+    margin: EdgeInsets.only(bottom: 16),
+    decoration: BoxDecoration(
+      color: Colors.red.withOpacity(0.1),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: Colors.red),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.error, color: Colors.red),
+        SizedBox(width: 8),
+        Expanded(
+          child: Text(errorMessage, style: TextStyle(color: Colors.red)),
+        ),
+      ],
+    ),
+  );
+}
 
 // Hospital Color Palette
 class HospitalColorPalette {
   // Primary Colors
-  static const Color primary = Color(0xFF1A5F7A);       // Deep Medical Blue
-  static const Color primaryLight = Color(0xFF2C86FF);  // Soft Sky Blue
-  static const Color background = Color(0xFFF5F5F5);    // Light Gray Background
-  static const Color accent = Color(0xFF20B2AA);        // Teal Accent
-  
+  static const Color primary = Color(0xFF1A5F7A); // Deep Medical Blue
+  static const Color primaryLight = Color(0xFF2C86FF); // Soft Sky Blue
+  static const Color background = Color(0xFFF5F5F5); // Light Gray Background
+  static const Color accent = Color(0xFF20B2AA); // Teal Accent
+
   // Text Colors
   static const Color textPrimary = Color(0xFF333333);
   static const Color textSecondary = Color(0xFF708090);
-  
+
   // Status Colors
   static const Color success = Color(0xFF28A745);
   static const Color warning = Color(0xFFFFC107);

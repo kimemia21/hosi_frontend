@@ -1,25 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:frontend/Authentication/Signup.dart';
+import 'package:frontend/Globals.dart';
+import 'package:frontend/creds.dart';
 import 'package:google_fonts/google_fonts.dart';
-
-
-// Hospital Color Palette
-class HospitalColorPalette {
-  // Primary Colors
-  static const Color primary = Color(0xFF1A5F7A);       // Deep Medical Blue
-  static const Color primaryLight = Color(0xFF2C86FF);  // Soft Sky Blue
-  static const Color background = Color(0xFFF5F5F5);    // Light Gray Background
-  static const Color accent = Color(0xFF20B2AA);        // Teal Accent
-  
-  // Text Colors
-  static const Color textPrimary = Color(0xFF333333);
-  static const Color textSecondary = Color(0xFF708090);
-  
-  // Status Colors
-  static const Color success = Color(0xFF28A745);
-  static const Color warning = Color(0xFFFFC107);
-  static const Color error = Color(0xFFDC3545);
-}
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -30,22 +14,45 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool isLoading = false;
+  String _errorMesssage="";
 
-  void _login() {
+  void _login() async {
     if (_formKey.currentState?.validate() ?? false) {
-      // Implement actual login logic here
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Logging in...',
-            style: GoogleFonts.poppins(color: Colors.white),
-          ),
-          backgroundColor: HospitalColorPalette.primary,
-        ),
+      setState(() {
+        isLoading = true;
+      });
+      
+      Map<String, dynamic> data = {
+        "username": _usernameController.text,
+        "password": _passwordController.text,
+      };
+      final response = await comms.postRequest(
+        endpoint: "api/auth/login",
+        data: data,
       );
+      print(response);
+      if (response["success"]) {
+      
+        setState(() {
+          isLoading = false;
+          _errorMesssage = "";
+        });
+        print(response);
+      } 
+      else {
+        setState(() {
+          isLoading = false;
+          _errorMesssage = response["rsp"];
+        });
+
+        print(response);
+      }
+      // Implement actual login logic here
+     
     }
   }
 
@@ -57,22 +64,25 @@ class _LoginPageState extends State<LoginPage> {
         builder: (context, constraints) {
           // Determine screen type
           bool isWideScreen = constraints.maxWidth > 1200;
-          bool isMediumScreen = constraints.maxWidth > 800 && constraints.maxWidth <= 1200;
+          bool isMediumScreen =
+              constraints.maxWidth > 800 && constraints.maxWidth <= 1200;
           bool isSmallScreen = constraints.maxWidth <= 800;
 
           return Center(
             child: SingleChildScrollView(
               child: Container(
-                width: isWideScreen 
-                    ? 900 
-                    : isMediumScreen 
-                        ? constraints.maxWidth * 0.9 
+                width:
+                    isWideScreen
+                        ? 900
+                        : isMediumScreen
+                        ? constraints.maxWidth * 0.9
                         : constraints.maxWidth * 0.95,
                 constraints: BoxConstraints(
-                  maxHeight: isWideScreen 
-                      ? constraints.maxHeight * 0.85 
-                      : isMediumScreen 
-                          ? constraints.maxHeight * 0.9 
+                  maxHeight:
+                      isWideScreen
+                          ? constraints.maxHeight * 0.85
+                          : isMediumScreen
+                          ? constraints.maxHeight * 0.9
                           : double.infinity,
                 ),
                 decoration: BoxDecoration(
@@ -86,9 +96,10 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-                child: isWideScreen 
-                    ? _buildWideScreenLayout() 
-                    : _buildResponsiveLayout(isSmallScreen),
+                child:
+                    isWideScreen
+                        ? _buildWideScreenLayout()
+                        : _buildResponsiveLayout(isSmallScreen),
               ),
             ),
           ).animate().fadeIn(duration: 600.ms);
@@ -104,13 +115,9 @@ class _LoginPageState extends State<LoginPage> {
         mainAxisSize: MainAxisSize.min,
         children: [
           // Logo
-          Image.asset(
-            'images/logo.png', 
-            height: 120,
-            fit: BoxFit.contain,
-          ),
+          Image.asset('images/logo.png', height: 120, fit: BoxFit.contain),
           const SizedBox(height: 20),
-          
+
           // App Name
           Text(
             "HOSI Health System",
@@ -123,7 +130,7 @@ class _LoginPageState extends State<LoginPage> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
-          
+
           // Login Form
           _buildLoginForm(),
         ],
@@ -162,7 +169,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 const SizedBox(height: 30),
                 Image.asset(
-                  'images/logo.png', 
+                  'images/logo.png',
                   height: 100,
                   fit: BoxFit.contain,
                 ),
@@ -172,12 +179,9 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ),
-        
+
         // Right Side: Login Form
-        Expanded(
-          flex: 6,
-          child: _buildLoginForm(),
-        ),
+        Expanded(flex: 6, child: _buildLoginForm()),
       ],
     );
   }
@@ -260,9 +264,13 @@ class _LoginPageState extends State<LoginPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            _errorMesssage != ""
+                ? errorWidget(errorMessage: _errorMesssage!)
+                : Container(),
+
             Text(
               "Welcome Back",
-               style: GoogleFonts.poppins(
+              style: GoogleFonts.poppins(
                 fontSize: 16,
                 fontWeight: FontWeight.w400,
                 color: HospitalColorPalette.textSecondary,
@@ -283,7 +291,8 @@ class _LoginPageState extends State<LoginPage> {
             const SizedBox(height: 20),
             _buildPasswordField(),
             const SizedBox(height: 30),
-            _buildLoginButton(),
+            isLoading ? processingWidget("Logging in...", 14, HospitalColorPalette.primary) 
+            : _buildLoginButton(),
             const SizedBox(height: 20),
             _buildSignUpRow(),
           ],
@@ -294,19 +303,14 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildEmailField() {
     return TextFormField(
-      controller: _emailController,
+      controller: _usernameController,
       style: GoogleFonts.poppins(),
-      decoration: _inputDecoration(
-        "Email Address",
-        Icons.email_outlined,
-      ),
+      decoration: _inputDecoration("Username", Icons.email_outlined),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter your email';
+          return 'Please enter your Username';
         }
-        if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-          return 'Enter a valid email address';
-        }
+
         return null;
       },
     );
@@ -350,9 +354,7 @@ class _LoginPageState extends State<LoginPage> {
       style: ElevatedButton.styleFrom(
         backgroundColor: HospitalColorPalette.primary,
         minimumSize: const Size(double.infinity, 50),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(15),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
         elevation: 3,
       ),
       child: Text(
@@ -373,12 +375,14 @@ class _LoginPageState extends State<LoginPage> {
       children: [
         Text(
           "Don't have an account? ",
-          style: GoogleFonts.poppins(
-            color: HospitalColorPalette.textSecondary,
-          ),
+          style: GoogleFonts.poppins(color: HospitalColorPalette.textSecondary),
         ),
         TextButton(
           onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => SignUpPage()),
+            );
             // Implement sign up navigation
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -402,7 +406,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  InputDecoration _inputDecoration(String label, IconData icon, {Widget? suffixIcon}) {
+  InputDecoration _inputDecoration(
+    String label,
+    IconData icon, {
+    Widget? suffixIcon,
+  }) {
     return InputDecoration(
       labelText: label,
       labelStyle: GoogleFonts.poppins(
@@ -410,10 +418,7 @@ class _LoginPageState extends State<LoginPage> {
         fontWeight: FontWeight.w500,
         color: HospitalColorPalette.textSecondary,
       ),
-      prefixIcon: Icon(
-        icon,
-        color: HospitalColorPalette.primary,
-      ),
+      prefixIcon: Icon(icon, color: HospitalColorPalette.primary),
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: HospitalColorPalette.background,
@@ -425,16 +430,11 @@ class _LoginPageState extends State<LoginPage> {
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(
-          color: HospitalColorPalette.primary,
-          width: 1.5,
-        ),
+        borderSide: BorderSide(color: HospitalColorPalette.primary, width: 1.5),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(15),
-        borderSide: BorderSide(
-          color: HospitalColorPalette.error,
-        ),
+        borderSide: BorderSide(color: HospitalColorPalette.error),
       ),
     );
   }
